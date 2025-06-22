@@ -3,16 +3,16 @@ import { Navigate } from 'react-router-dom';
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
-import { MessageCircle, Mail, Lock } from 'lucide-react';
+import { MessageCircle, Mail, Lock, User } from 'lucide-react';
 
-const LoginPage = ({ isAuthenticated, setIsAuthenticated }) => {
-  const [loginData, setLoginData] = useState({ email: '', password: '' });
+const SignUpPage = ({ isAuthenticated, setIsAuthenticated }) => {
+  const [signupData, setSignupData] = useState({ name: '', email: '', password: '', confirmPassword: '' });
 
   if (isAuthenticated) {
     return <Navigate to="/chat" replace />;
   }
 
-  const handleLogin = (e) => {
+  const handleSignup = (e) => {
     e.preventDefault();
     setIsAuthenticated(true);
   };
@@ -26,23 +26,36 @@ const LoginPage = ({ isAuthenticated, setIsAuthenticated }) => {
             <MessageCircle className="w-8 h-8 text-white" />
           </div>
           <CardTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            Welcome Back
+            Create an Account
           </CardTitle>
           <CardDescription className="text-gray-600">
-            Sign in to your IntelliLearn account
+            Sign up to start chatting with IntelliLearn
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleLogin} className="space-y-4">
+          <form onSubmit={handleSignup} className="space-y-4">
+            <div className="space-y-2">
+              <div className="relative">
+                <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Input
+                  type="text"
+                  placeholder="Full Name"
+                  value={signupData.name}
+                  onChange={(e) => setSignupData({...signupData, name: e.target.value})}
+                  className="border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                  required
+                />
+              </div>
+            </div>
             <div className="space-y-2">
               <div className="relative">
                 <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                 <Input
                   type="email"
                   placeholder="Email"
-                  value={loginData.email}
-                  onChange={(e) => setLoginData({...loginData, email: e.target.value})}
-                  className="pl-10 transition-all focus:ring-2 focus:ring-blue-500"
+                  value={signupData.email}
+                  onChange={(e) => setSignupData({...signupData, email: e.target.value})}
+                  className="border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
                   required
                 />
               </div>
@@ -53,9 +66,22 @@ const LoginPage = ({ isAuthenticated, setIsAuthenticated }) => {
                 <Input
                   type="password"
                   placeholder="Password"
-                  value={loginData.password}
-                  onChange={(e) => setLoginData({...loginData, password: e.target.value})}
-                  className="pl-10 transition-all focus:ring-2 focus:ring-blue-500"
+                  value={signupData.password}
+                  onChange={(e) => setSignupData({...signupData, password: e.target.value})}
+                  className="border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                  required
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <div className="relative">
+                <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Input
+                  type="password"
+                  placeholder="Confirm Password"
+                  value={signupData.confirmPassword}
+                  onChange={(e) => setSignupData({...signupData, confirmPassword: e.target.value})}
+                  className="border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
                   required
                 />
               </div>
@@ -64,11 +90,11 @@ const LoginPage = ({ isAuthenticated, setIsAuthenticated }) => {
               type="submit" 
               className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl"
             >
-              Sign In
+              Create Account
             </Button>
             <div className="text-center mt-4">
-              <span className="text-gray-600">Don't have an account? </span>
-              <a href="/signup" className="text-blue-600 hover:underline">Sign Up</a>
+              <span className="text-gray-600">Already have an account? </span>
+              <a href="/" className="text-blue-600 hover:underline">Sign In</a>
             </div>
           </form>
         </CardContent>
@@ -77,4 +103,4 @@ const LoginPage = ({ isAuthenticated, setIsAuthenticated }) => {
   );
 };
 
-export default LoginPage;
+export default SignUpPage; 
