@@ -1,5 +1,5 @@
 import * as React from "react"
-import { cn } from "../lib/utils"; // adjust based on file location
+import { cn } from "../../libs/utils"; // adjust based on file location
 
 
 const Button = React.forwardRef(({ className, variant = "default", size = "default", asChild = false, ...props }, ref) => {

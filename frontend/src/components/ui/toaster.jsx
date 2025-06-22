@@ -1,5 +1,5 @@
-import { useToast } from "../hooks/use-toast"
-import { cn } from "../lib/utils"; // adjust based on file location
+import { useToast } from "../../hooks/use-toast"
+import { cn } from "../../libs/utils";
 import { X } from "lucide-react"
 
 export function Toaster() {
