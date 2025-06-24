@@ -7,11 +7,12 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import LoginPage from "./pages/LoginPage";
 import ChatPage from "./pages/ChatPage";
 import ProtectedRoute from "./components/ProtectedRoute";
+import SignUpPage from "./pages/SignUpPage";
 
 const queryClient = new QueryClient();
 
 const App = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(true);
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -35,6 +36,15 @@ const App = () => {
                 <ProtectedRoute isAuthenticated={isAuthenticated}>
                   <ChatPage setIsAuthenticated={setIsAuthenticated} />
                 </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/signup" 
+              element={
+                <SignUpPage 
+                  isAuthenticated={isAuthenticated} 
+                  setIsAuthenticated={setIsAuthenticated} 
+                />
               } 
             />
           </Routes>
