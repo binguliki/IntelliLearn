@@ -1,0 +1,11 @@
+{
+    "mcpServers":{
+        "Backend Tools": {
+            "command": "fastmcp",
+            "args": [
+                "run",
+                "src/server.py"
+            ]
+        }
+    }
+}
