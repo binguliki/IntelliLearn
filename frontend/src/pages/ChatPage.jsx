@@ -1,50 +1,30 @@
 import { useState, useRef, useEffect } from 'react';
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
-import { Card } from "../components/ui/card";
-import { Avatar, AvatarFallback } from "../components/ui/avatar";
 import { MessageCircle, Send, LogOut, Bot, User, Image as ImageIcon, Paperclip } from 'lucide-react';
 import { useToast } from "../hooks/use-toast";
 import ChatMessage from "../components/ChatMessage";
 import TypingIndicator from "../components/TypingIndicator";
 
 const ChatPage = ({ setIsAuthenticated }) => {
-  const [messages, setMessages] = useState([
-    {
-      id: 1,
-      text: "Hello! I'm your AI assistant. How can I help you today?",
-      sender: 'bot',
-      timestamp: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
-    }
-  ]);
+  const [messages, setMessages] = useState(() => {
+    const savedMessages = localStorage.getItem('chat_messages');
+    return savedMessages ? JSON.parse(savedMessages) : [];
+  });
   const [newMessage, setNewMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef(null);
   const { toast } = useToast();
   const fileInputRef = useRef(null);
-  const [fileType, setFileType] = useState('image');
-  const [dropdownOpen, setDropdownOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
+  const [imageBase64, setImageBase64] = useState(null);
 
-  const fileTypeOptions = [
-    { label: 'Image', value: 'image' },
-    { label: 'PDF', value: 'pdf' },
-    { label: 'Doc', value: 'doc' },
-  ];
-
-  const getAcceptType = () => {
-    switch (fileType) {
-      case 'image':
-        return 'image/*';
-      case 'pdf':
-        return 'application/pdf';
-      case 'doc':
-        return '.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document';
-      default:
-        return '*/*';
-    }
-  };
+  let sessionId = localStorage.getItem('session_id');
+  if (!sessionId) {
+    sessionId = crypto.randomUUID();
+    localStorage.setItem('session_id', sessionId);
+  }
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -54,104 +34,113 @@ const ChatPage = ({ setIsAuthenticated }) => {
     scrollToBottom();
   }, [messages, isTyping]);
 
+  useEffect(() => {
+    localStorage.setItem('chat_messages', JSON.stringify(messages));
+  }, [messages]);
+
   const handleLogout = () => {
     setIsAuthenticated(false);
+    localStorage.removeItem('chat_messages');
+    localStorage.removeItem('session_id');
     toast({
       title: "Logged out",
       description: "You've been successfully logged out.",
     });
   };
 
-  const simulateBotResponse = (userMessage) => {
-    const responses = [
-      "That's an interesting question! Let me think about that...",
-      "I understand what you're asking. Here's my perspective on that:",
-      "Great point! I'd be happy to help you with that.",
-      "That reminds me of something important I should mention:",
-      "I see what you mean. Let me provide you with some insights:",
-      "Absolutely! Here's what I think about your question:",
-      "That's a fantastic question. I'm glad you asked!",
-      "I appreciate you sharing that with me. Here's my response:",
-    ];
-    
-    const followUps = [
-      " What are your thoughts on this approach?",
-      " Would you like me to elaborate on any specific aspect?",
-      " Is there anything else you'd like to know about this topic?",
-      " How does this align with what you were expecting?",
-      " Feel free to ask if you need any clarification!",
-      " What would you like to explore next?",
-    ];
-
-    const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-    const randomFollowUp = followUps[Math.floor(Math.random() * followUps.length)];
-    
-    return randomResponse + randomFollowUp;
+  const handleReset = () => {
+    setMessages([]);
+    localStorage.removeItem('chat_messages');
+    const newSessionId = crypto.randomUUID();
+    localStorage.setItem('session_id', newSessionId);
+    setNewMessage('');
+    setSelectedFile(null);
+    setPreviewUrl(null);
+    setImageBase64(null);
   };
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!newMessage.trim() && !selectedFile) return;
-
+  
     let userMessage = {
       id: messages.length + 1,
       text: newMessage,
       sender: 'user',
-      timestamp: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+      timestamp: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+      image: previewUrl ? previewUrl : null
     };
-    if (selectedFile) {
-      if (fileType === 'image' && previewUrl) {
-        userMessage.image = previewUrl;
-      } else {
-        userMessage.file = {
-          name: selectedFile.name,
-          type: selectedFile.type,
-        };
-      }
-    }
     setMessages(prev => [...prev, userMessage]);
+  
     setNewMessage('');
     setSelectedFile(null);
     setPreviewUrl(null);
+  
     setIsTyping(true);
-
-    // Simulate bot typing and response
-    setTimeout(() => {
+  
+    try {
+      const imageMimeType = selectedFile ? selectedFile.type : null;
+  
+      const payload = {
+        message: newMessage,
+        session_id: sessionId,
+        image_base64: imageBase64,
+        image_mime_type: imageMimeType
+      };
+  
+      const res = await fetch('http://localhost:8000/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+  
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(`Server error: ${res.status} ${res.statusText} - ${errorData.detail || JSON.stringify(errorData)}`);
+      }
+  
+      const data = await res.json();
+      let botText = data.text;
+      if (typeof botText === 'object') {
+        botText = JSON.stringify(botText);
+      }
       const botResponse = {
         id: messages.length + 2,
-        text: simulateBotResponse(newMessage),
+        text: botText || 'Sorry, there was an error.',
         sender: 'bot',
-        timestamp: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+        timestamp: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+        image: data.image ? `data:image/png;base64,${data.image}` : null
       };
       setMessages(prev => [...prev, botResponse]);
+    } catch (err) {
+      console.error("Error sending message:", err);
+      setMessages(prev => [...prev, {
+        id: messages.length + 2,
+        text: `Error contacting server: ${err.message}`,
+        sender: 'bot',
+        timestamp: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+      }]);
+    } finally {
       setIsTyping(false);
-    }, 1500 + Math.random() * 2000);
-  };
-
-  const handlePaperclipClick = () => {
-    setDropdownOpen((open) => !open);
-  };
-
-  const handleFileTypeSelect = (type) => {
-    setFileType(type);
-    setDropdownOpen(false);
-    setTimeout(() => {
-      fileInputRef.current?.click();
-    }, 0);
+      setImageBase64(null);
+    }
   };
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
     setSelectedFile(file);
-    if (fileType === 'image' && file.type.startsWith('image/')) {
+    if (file.type.startsWith('image/')) {
       const reader = new FileReader();
       reader.onload = (event) => {
         setPreviewUrl(event.target.result);
+        const base64 = event.target.result.split(',')[1];
+        setImageBase64(base64);
       };
       reader.readAsDataURL(file);
     } else {
       setPreviewUrl(null);
+      setImageBase64(null);
     }
   };
 
@@ -198,31 +187,17 @@ const ChatPage = ({ setIsAuthenticated }) => {
             <div className="relative">
               <button
                 type="button"
-                onClick={handlePaperclipClick}
+                onClick={() => fileInputRef.current?.click()}
                 className="flex items-center justify-center h-10 w-10 rounded-l-xl text-blue-500 bg-white border-none shadow-none transition-colors focus:outline-none focus:ring-0 focus:border-none active:outline-none active:ring-0 active:border-none hover:bg-blue-50"
                 style={{ marginRight: '-0.5rem', borderTopRightRadius: 0, borderBottomRightRadius: 0 }}
                 tabIndex={-1}
               >
                 <Paperclip className="w-5 h-5" />
               </button>
-              {dropdownOpen && (
-                <div className="absolute left-0 bottom-12 bg-white border border-gray-200 rounded-md shadow-md z-30 min-w-[120px]">
-                  {fileTypeOptions.map(opt => (
-                    <button
-                      key={opt.value}
-                      type="button"
-                      onClick={() => handleFileTypeSelect(opt.value)}
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-blue-50"
-                    >
-                      {opt.label}
-                    </button>
-                  ))}
-                </div>
-              )}
             </div>
             <input
               type="file"
-              accept={getAcceptType()}
+              accept="image/*"
               ref={fileInputRef}
               onChange={handleFileChange}
               className="hidden"
@@ -238,7 +213,7 @@ const ChatPage = ({ setIsAuthenticated }) => {
             />
             {selectedFile && (
               <div className="flex items-center space-x-2 ml-2">
-                {fileType === 'image' && previewUrl ? (
+                {previewUrl ? (
                   <img src={previewUrl} alt="preview" className="w-10 h-10 object-cover rounded" />
                 ) : (
                   <span className="text-xs text-gray-600 truncate max-w-[120px]">{selectedFile.name}</span>
@@ -250,9 +225,19 @@ const ChatPage = ({ setIsAuthenticated }) => {
               type="submit"
               size="sm"
               className="w-9 h-9 p-0 bg-blue-500 hover:bg-blue-600 text-white rounded-md shadow-none"
-              disabled={!newMessage.trim()}
+              disabled={!newMessage.trim() && !selectedFile}
             >
               <Send className="w-4 h-4" />
+            </Button>
+            {/* Reset Button */}
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="w-16 h-9 p-0 ml-2 text-gray-500 border-gray-300 hover:bg-gray-100 hover:text-red-600"
+              onClick={handleReset}
+            >
+              Reset
             </Button>
           </form>
         </div>
