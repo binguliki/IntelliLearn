@@ -36,8 +36,6 @@ def generate_image(description: str) -> str:
 
         client = genai.Client(api_key=api_key)
 
-        # SOLUTION 1: Use a single combined prompt instead of multiple contents
-        # This prevents LangChain from adding empty parts
         combined_prompt = f"{SYSTEM_PROMPT.strip()}\n\nGenerate an image for: {description.strip()}"
         
         response = client.models.generate_content(
@@ -46,7 +44,6 @@ def generate_image(description: str) -> str:
             config=GenerateContentConfig(response_modalities=['TEXT', 'IMAGE'])
         )
 
-        # Check if response exists and has candidates
         if not response or not response.candidates:
             return "Error: No response received from Gemini."
 
@@ -63,7 +60,6 @@ def generate_image(description: str) -> str:
         if not image_part:
             return "Error: No image data found in the response."
 
-        # Encode the image
         encoded = base64.b64encode(image_part.inline_data.data).decode("utf-8")
         
         return encoded
