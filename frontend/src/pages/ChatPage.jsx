@@ -5,8 +5,9 @@ import { MessageCircle, Send, LogOut, Bot, User, Image as ImageIcon, Paperclip }
 import { useToast } from "../hooks/use-toast";
 import ChatMessage from "../components/ChatMessage";
 import TypingIndicator from "../components/TypingIndicator";
+import { Link } from 'react-router-dom';
 
-const ChatPage = ({ setIsAuthenticated }) => {
+const ChatPage = ({ setIsAuthenticated, handleReset }) => {
   const [messages, setMessages] = useState(() => {
     const savedMessages = localStorage.getItem('chat_messages');
     return savedMessages ? JSON.parse(savedMessages) : [];
@@ -46,17 +47,6 @@ const ChatPage = ({ setIsAuthenticated }) => {
       title: "Logged out",
       description: "You've been successfully logged out.",
     });
-  };
-
-  const handleReset = () => {
-    setMessages([]);
-    localStorage.removeItem('chat_messages');
-    const newSessionId = crypto.randomUUID();
-    localStorage.setItem('session_id', newSessionId);
-    setNewMessage('');
-    setSelectedFile(null);
-    setPreviewUrl(null);
-    setImageBase64(null);
   };
 
   const handleSendMessage = async (e) => {
@@ -145,31 +135,7 @@ const ChatPage = ({ setIsAuthenticated }) => {
   };
 
   return (
-    <div className="min-h-screen bg-white font-sans">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 shadow-sm">
-        <div className="max-w-2xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="w-9 h-9 bg-blue-100 rounded-xl flex items-center justify-center shadow-sm">
-              <MessageCircle className="w-5 h-5 text-blue-500" />
-            </div>
-            <div>
-              <h1 className="text-lg font-semibold text-gray-900">ChatBot</h1>
-              <p className="text-xs text-gray-400">AI Assistant</p>
-            </div>
-          </div>
-          <Button 
-            onClick={handleLogout}
-            variant="outline" 
-            size="sm"
-            className="flex items-center space-x-2 border border-gray-200 text-gray-500 hover:bg-gray-100 hover:text-blue-600 transition-all"
-          >
-            <LogOut className="w-4 h-4" />
-            <span>Logout</span>
-          </Button>
-        </div>
-      </div>
-
+    <div className="min-h-screen bg-white font-sans pt-16">
       {/* Chat Area */}
       <div className="max-w-2xl mx-auto h-[calc(100vh-120px)] flex flex-col relative">
         {/* Messages */}
@@ -228,16 +194,6 @@ const ChatPage = ({ setIsAuthenticated }) => {
               disabled={!newMessage.trim() && !selectedFile}
             >
               <Send className="w-4 h-4" />
-            </Button>
-            {/* Reset Button */}
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              className="w-16 h-9 p-0 ml-2 text-gray-500 border-gray-300 hover:bg-gray-100 hover:text-red-600"
-              onClick={handleReset}
-            >
-              Reset
             </Button>
           </form>
         </div>

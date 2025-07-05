@@ -1,7 +1,7 @@
-import LoginPage from './LoginPage';
+import Dashboard from './Dashboard';
 
-const Index = () => {
-  return <LoginPage />;
+const Index = (props) => {
+  return <Dashboard {...props} />;
 };
 
 export default Index;
