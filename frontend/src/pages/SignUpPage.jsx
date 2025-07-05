@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, Link } from 'react-router-dom';
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
@@ -18,7 +18,7 @@ const SignUpPage = ({ isAuthenticated, setIsAuthenticated }) => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-4">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-4">
       <div className="absolute inset-0 bg-gradient-to-br from-blue-400/10 via-purple-400/10 to-pink-400/10"></div>
       <Card className="w-full max-w-md relative backdrop-blur-sm bg-white/80 border-white/20 shadow-2xl">
         <CardHeader className="text-center space-y-4">
@@ -36,52 +36,52 @@ const SignUpPage = ({ isAuthenticated, setIsAuthenticated }) => {
           <form onSubmit={handleSignup} className="space-y-4">
             <div className="space-y-2">
               <div className="relative">
-                <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
                 <Input
                   type="text"
                   placeholder="Full Name"
                   value={signupData.name}
                   onChange={(e) => setSignupData({...signupData, name: e.target.value})}
-                  className="border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                  className="pl-10 h-12 border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
                   required
                 />
               </div>
             </div>
             <div className="space-y-2">
               <div className="relative">
-                <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
                 <Input
                   type="email"
                   placeholder="Email"
                   value={signupData.email}
                   onChange={(e) => setSignupData({...signupData, email: e.target.value})}
-                  className="border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                  className="pl-10 h-12 border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
                   required
                 />
               </div>
             </div>
             <div className="space-y-2">
               <div className="relative">
-                <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
                 <Input
                   type="password"
                   placeholder="Password"
                   value={signupData.password}
                   onChange={(e) => setSignupData({...signupData, password: e.target.value})}
-                  className="border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                  className="pl-10 h-12 border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
                   required
                 />
               </div>
             </div>
             <div className="space-y-2">
               <div className="relative">
-                <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
                 <Input
                   type="password"
                   placeholder="Confirm Password"
                   value={signupData.confirmPassword}
                   onChange={(e) => setSignupData({...signupData, confirmPassword: e.target.value})}
-                  className="border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                  className="pl-10 h-12 border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
                   required
                 />
               </div>
@@ -94,7 +94,7 @@ const SignUpPage = ({ isAuthenticated, setIsAuthenticated }) => {
             </Button>
             <div className="text-center mt-4">
               <span className="text-gray-600">Already have an account? </span>
-              <a href="/" className="text-blue-600 hover:underline">Sign In</a>
+              <Link to="/signin" className="text-blue-600 hover:underline">Sign In</Link>
             </div>
           </form>
         </CardContent>
