@@ -1,4 +1,5 @@
 import re
+import json
 from typing import Dict, Union
 from dotenv import load_dotenv
 
@@ -27,7 +28,7 @@ Teaching Style:
 - For advanced learners: Be deep, analytical, and technically rich.
 - Use diagrams or generated images whenever a student seems confused or asks for a visual explanation.
 
-Tools You Can Use:
+Tool You Can Use:
 - **generate_image** — Use this tool to generate diagrams, flowcharts, illustrations, or visual explanations for any topic.
 
 When to Use generate_image:
@@ -35,13 +36,22 @@ When to Use generate_image:
 - You believe a concept would be better understood with a visual representation.
 - You're explaining something like architecture, flow, layers, structures, processes, etc.
 
-Response Format:
-- Always include the image in your message using this exact format:
-  [IMAGE:<base64string>]
+How to Call a Tool:
+- When you want to use the `generate_image` tool, respond using this structure:
 
-Do not say "image generated" without including the actual image.
+{
+  "tool": {
+    "name": "generate_image",
+    "parameters": {
+      "description": "a detailed description of the image to be generated"
+    }
+  },
+  "text": "Additional explanation if needed."
+}
 
-When you want to generate an image, respond with: GENERATE_IMAGE: [detailed description of the image]
+Rules:
+- This JSON should be a single object embedded in the response.
+- Only one tool call per response.
 '''
 
 def get_or_create_llm(session_id: str):
@@ -51,7 +61,6 @@ def get_or_create_llm(session_id: str):
     llm = ChatGoogleGenerativeAI(
         model="gemini-2.0-flash",
         temperature=0.7,
-        convert_system_message_to_human=True,
     )
 
     memory = ConversationBufferMemory(
@@ -67,51 +76,66 @@ async def chat_with_memory(user_input: Union[str, dict], session_id: str) -> dic
     llm = agent_data["llm"]
     memory = agent_data["memory"]
 
+    text = ""
+    image_b64 = None
+
     if isinstance(user_input, dict):
         text = user_input.get("text", "")
         image_b64 = user_input.get("image_base64", None)
-
-        if image_b64:
-            input_text = f"{text}\n\n[Note: User has uploaded an image - please provide relevant visual explanations]"
-        else:
-            input_text = text
     else:
-        input_text = str(user_input)
+        text = str(user_input)
 
     try:
-        if not input_text.strip():
+        if not text.strip():
             return {"text": "Please provide a question or topic you'd like to learn about."}
 
         chat_history = memory.chat_memory.messages
-        messages = [
-            HumanMessage(content=SYSTEM_PROMPT)
-        ]
+        messages = [HumanMessage(content=SYSTEM_PROMPT)]
         messages.extend(chat_history)
-        messages.append(HumanMessage(content=input_text))
+
+        if image_b64:
+            content = [
+                {"type": "text", "text": text},
+                {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{image_b64}"}}
+            ]
+            messages.append(HumanMessage(content=content))
+        else:
+            messages.append(HumanMessage(content=text))
 
         response = await llm.ainvoke(messages)
-        output = response.content
+        raw_output = response.content.strip()
+        
+        tool_block_match = re.search(
+            r'{\s*"tool"\s*:\s*{[\s\S]+?},\s*"text"\s*:\s*".*?"\s*}', raw_output
+        )
 
-        image_request_match = re.search(r'GENERATE_IMAGE:\s*(.+)', output, re.IGNORECASE)
-        if image_request_match:
-            image_description = image_request_match.group(1).strip()
-            image_result = generate_image(image_description)
-            if image_result.startswith("[IMAGE:"):
-                output = re.sub(r'GENERATE_IMAGE:\s*.+', image_result, output, flags=re.IGNORECASE)
-            else:
-                output = re.sub(r'GENERATE_IMAGE:\s*.+', f"[Image generation failed: {image_result}]", output, flags=re.IGNORECASE)
+        if tool_block_match:
+            try:
+                parsed = json.loads(tool_block_match.group())
 
-        memory.chat_memory.add_user_message(input_text)
-        memory.chat_memory.add_ai_message(output)
+                explanation = parsed.get("text", "").strip()
+                tool = parsed.get("tool", {})
+                tool_name = tool.get("name")
+                tool_params = tool.get("parameters", {})
+                
+                if tool_name == "generate_image" and "description" in tool_params:
+                    description = tool_params["description"]
+                    image_result = generate_image.invoke({"description": description})
 
-        image_match = re.search(r'\[IMAGE:([A-Za-z0-9+/=]+)\]', output)
-        if image_match:
-            image_base64 = image_match.group(1)
-            clean_text = re.sub(r'\[IMAGE:[A-Za-z0-9+/=]+\]', '', output).strip()
-            return {"text": clean_text, "image": image_base64}
+                    memory.chat_memory.add_user_message(text)
+                    memory.chat_memory.add_ai_message(f"{explanation}\n[Image generated: {description}]")
 
-        return {"text": output}
+                    return {
+                        "text": explanation,
+                        "image": image_result
+                    }
+
+            except json.JSONDecodeError:
+                pass 
+
+        memory.chat_memory.add_user_message(text)
+        memory.chat_memory.add_ai_message(raw_output)
+        return {"text": raw_output, "image": ""}
 
     except Exception as e:
-        error_msg = str(e)
-        return {"text": f"Error: {error_msg}"}
+        return {"text": f"Error: {str(e)}", "image": ""}

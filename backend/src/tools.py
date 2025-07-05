@@ -16,7 +16,7 @@ def generate_image(description: str) -> str:
         description: Description of the image to generate.
 
     Returns:
-        A base64-encoded image string in the format [IMAGE:base64string].
+        A base64-encoded image string.
     """
     if not description or not description.strip():
         return "Error: Description must not be empty."
@@ -54,7 +54,6 @@ def generate_image(description: str) -> str:
         if not candidate.content or not candidate.content.parts:
             return "Error: No content parts in the response."
 
-        # Find the image part
         image_part = None
         for part in candidate.content.parts:
             if hasattr(part, 'inline_data') and part.inline_data:
@@ -67,8 +66,7 @@ def generate_image(description: str) -> str:
         # Encode the image
         encoded = base64.b64encode(image_part.inline_data.data).decode("utf-8")
         
-        # Return in the expected format that your client.py expects
-        return f"[IMAGE:{encoded}]"
+        return encoded
     
     except Exception as e:
         return f"Error generating image: {str(e)}"
