@@ -1,4 +1,4 @@
-import { useToast } from "../../hooks/use-toast"
+import { useToast } from "../../hooks/use-toast.jsx"
 import { cn } from "../../libs/utils";
 import { X } from "lucide-react"
 

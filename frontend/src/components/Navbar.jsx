@@ -40,7 +40,7 @@ const Navbar = ({ isAuthenticated, onLogout, onReset }) => {
                 tabIndex={0}
                 type="button"
                 className="rounded-full px-6 py-2 font-semibold border-2 border-blue-500 text-blue-600 
-                hover:bg-gray-100 hover:bg-blue-50 hover:text-blue-700 transition-all duration-200 focus-visible:ring-2 focus-visible:ring-blue-400"
+                hover:bg-gray-100 hover:text-blue-700 transition-all duration-200 focus-visible:ring-2 focus-visible:ring-blue-400"
               >
                 Sign In
               </Button>
