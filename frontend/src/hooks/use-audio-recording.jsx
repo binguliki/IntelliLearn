@@ -16,6 +16,71 @@ export const useAudioRecording = (sessionId) => {
   const { toast } = useToast();
   const WAVEFORM_BARS = 110;
 
+  // Function to convert webm to wav
+  const convertWebmToWav = async (webmBlob) => {
+    return new Promise((resolve, reject) => {
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const fileReader = new FileReader();
+      
+      fileReader.onload = async (event) => {
+        try {
+          const arrayBuffer = event.target.result;
+          const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+          
+          const wavBlob = audioBufferToWav(audioBuffer);
+          resolve(wavBlob);
+        } catch (error) {
+          reject(error);
+        } finally {
+          audioContext.close();
+        }
+      };
+      
+      fileReader.onerror = reject;
+      fileReader.readAsArrayBuffer(webmBlob);
+    });
+  };
+
+  const audioBufferToWav = (audioBuffer) => {
+    const numChannels = audioBuffer.numberOfChannels;
+    const sampleRate = audioBuffer.sampleRate;
+    const length = audioBuffer.length;
+    
+    const buffer = new ArrayBuffer(44 + length * numChannels * 2);
+    const view = new DataView(buffer);
+    
+    const writeString = (offset, string) => {
+      for (let i = 0; i < string.length; i++) {
+        view.setUint8(offset + i, string.charCodeAt(i));
+      }
+    };
+    
+    writeString(0, 'RIFF');
+    view.setUint32(4, 36 + length * numChannels * 2, true);
+    writeString(8, 'WAVE');
+    writeString(12, 'fmt ');
+    view.setUint32(16, 16, true);
+    view.setUint16(20, 1, true);
+    view.setUint16(22, numChannels, true);
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(28, sampleRate * numChannels * 2, true);
+    view.setUint16(32, numChannels * 2, true);
+    view.setUint16(34, 16, true);
+    writeString(36, 'data');
+    view.setUint32(40, length * numChannels * 2, true);
+    
+    let offset = 44;
+    for (let i = 0; i < length; i++) {
+      for (let channel = 0; channel < numChannels; channel++) {
+        const sample = Math.max(-1, Math.min(1, audioBuffer.getChannelData(channel)[i]));
+        view.setInt16(offset, sample * 0x7FFF, true);
+        offset += 2;
+      }
+    }
+    
+    return new Blob([buffer], { type: 'audio/wav' });
+  };
+
   useEffect(() => {
     return () => {
       if (animationFrameRef.current) {
@@ -73,9 +138,10 @@ export const useAudioRecording = (sessionId) => {
     
     try {
       const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+      const wavBlob = await convertWebmToWav(audioBlob);
       
       const formData = new FormData();
-      formData.append('audio_file', audioBlob, 'recording.webm');
+      formData.append('audio_file', wavBlob, 'recording.wav');
       formData.append('session_id', sessionId);
       
       const response = await fetch('http://localhost:8000/transcribe', {

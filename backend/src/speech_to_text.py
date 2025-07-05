@@ -1,7 +1,7 @@
 import io
 import librosa
 import soundfile as sf
-from transformers import AutoProcessor, GenerationConfig
+from transformers import AutoProcessor
 from optimum.intel.openvino import OVModelForSpeechSeq2Seq
 import numpy as np
 
