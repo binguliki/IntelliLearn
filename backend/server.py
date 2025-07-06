@@ -1,13 +1,21 @@
-import os
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
-from src.client import chat_with_memory
-from src.speech_to_text import get_speech_processor
+from contextlib import asynccontextmanager
+from src.client import Agent
+from src.speech_to_text import get_speech_processor, is_speech_model_ready
 
 load_dotenv()
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    speech_processor = get_speech_processor()
+    speech_processor.load_model_async()
+    yield
+
+    del speech_processor
+
+app = FastAPI(lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -17,13 +25,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-print("Loading models...")
-get_speech_processor()
-print("Models loaded successfully!")
+agent = Agent()
 
 @app.get("/ready")
 async def ready_check():
-    return {"status": "ready"}
+    return {"status": "ready", "speech_model_ready": is_speech_model_ready()}
 
 @app.post("/chat")
 async def chat_endpoint(request: Request):
@@ -38,7 +44,7 @@ async def chat_endpoint(request: Request):
     content = {"text": message}
     if image_base64:
         content["image_base64"] = image_base64
-    response = await chat_with_memory(content, session_id)
+    response = await agent.process_query(content)
     return response
 
 @app.post("/transcribe")
@@ -52,6 +58,12 @@ async def transcribe_endpoint(
         
         if not audio_file.content_type.startswith('audio/'):
             return {"error": "File must be an audio file"}
+        
+        if not is_speech_model_ready():
+            return {
+                "error": "Speech-to-text model is still loading. Please try again soon.",
+                "success": False
+            }
         
         audio_content = await audio_file.read()
         
