@@ -4,21 +4,34 @@ import soundfile as sf
 from transformers import AutoProcessor
 from optimum.intel.openvino import OVModelForSpeechSeq2Seq
 import numpy as np
+import threading
 
 class SpeechToTextProcessor:
     def __init__(self):
         self.model = None
         self.processor = None
         self.model_id = "OpenVINO/whisper-tiny-fp16-ov"
-        self._load_model()
-    
+        self._ready = False
+
     def _load_model(self):
         try:
             self.processor = AutoProcessor.from_pretrained(self.model_id)
             self.model = OVModelForSpeechSeq2Seq.from_pretrained(self.model_id)
+            self._ready = True
         except Exception as e:
             print(f"Error loading Whisper model: {e}")
+            self._ready = False
             raise
+
+    def load_model_async(self):
+        def target():
+            self._load_model()
+        thread = threading.Thread(target=target)
+        thread.daemon = True
+        thread.start()
+
+    def is_ready(self):
+        return self._ready
 
     def transcribe_audio_bytes(self, audio_bytes: bytes) -> str:
         try:
@@ -61,3 +74,9 @@ def get_speech_processor():
     if speech_processor is None:
         speech_processor = SpeechToTextProcessor()
     return speech_processor
+
+def is_speech_model_ready():
+    global speech_processor
+    if speech_processor is None:
+        return False
+    return speech_processor.is_ready()
