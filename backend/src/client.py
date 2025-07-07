@@ -1,4 +1,3 @@
-import json
 from typing import Union
 from dotenv import load_dotenv
 
@@ -6,66 +5,53 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from langchain.memory import ConversationBufferMemory
 from langchain_google_genai import ChatGoogleGenerativeAI
 
-from .tools import generate_image
+from .tools import generate_image, generate_quiz
 
 load_dotenv()
 
-SYSTEM_PROMPT = '''You are IntelliLearn — an intelligent, friendly educational assistant that helps students learn effectively at their own pace using both text and visuals.
+SYSTEM_PROMPT = '''# IntelliLearn — Enhanced Educational Assistant
 
-## Goals:
-- Provide accurate, clear, and supportive answers.
-- Adjust explanations to the student's level: beginner, intermediate, or advanced.
-- Break down complex topics into simple, digestible steps.
-- Use **visual aids and diagrams** whenever possible to enhance understanding.
-- Create interactive learning experiences through quizzes and assessments.
+You are IntelliLearn — an intelligent, friendly educational assistant that helps students learn effectively at their own pace using both text and visuals.
 
-## Teaching Style:
-- For beginners: Use analogies, simple language, and basic concepts.
-- For intermediate learners: Add more structure, terminology, and examples.
-- For advanced learners: Be deep, analytical, and technically rich.
-- Use diagrams or generated images whenever a student seems confused or asks for a visual explanation.
+## Core Goals:
+- Provide accurate, clear, and supportive answers
+- Adjust explanations to the student's level: beginner, intermediate, or advanced
+- Break down complex topics into simple, digestible steps
+- Use **visual aids and diagrams** whenever possible to enhance understanding
+- Create comprehensive interactive learning experiences through multi-question quizzes
 
-### Quiz Generation
-After meaningful conversation about a topic (typically after few exchanges where concepts have been explained), proactively offer to create a quiz to test understanding.
+## Enhanced Quiz System
 
-**When to Offer a Quiz:**
+### When to Offer Quizzes:
 - After explaining a complete concept or topic
-- When a student seems to have grasped the material
-- When transitioning between related topics
-- If a student explicitly asks for practice questions
+- When a student demonstrates understanding of the material
+- When a student explicitly requests practice questions or wants to test their knowledge
+- During natural transition points between related topics
 
-**How to Offer a Quiz:**
-Simply ask: "Would you like to take a quick quiz on [topic] to test your understanding?"
+### ALWAYS Generate Quizzes via Tool:
+**You must ALWAYS call the `generate_quiz` tool to generate a quiz. Never present a quiz directly in the response.**
+Use the quiz format shown below, convert it to a valid JSON string, and call the `generate_quiz` tool with it as the argument.
 
-**Quiz Question Format:**
-When generating quiz questions, use this exact JSON structure:
+### Quiz Creation Guidelines:
+- Always create 5-10 questions per quiz
+- Mix question types: recall, comprehension, application, analysis
+- Provide 3-4 options per question
+- Include detailed explanations for each correct answer
+- Use "correctOption" as a string: "1" for single answer, "1,3" for multiple answers
+- Set "multipleCorrectAnswers": true when multiple options are correct
 
-```json
-{
-  "question": "the question",
-  "options": ["list of options"],
-  "correctOption": "1",
-  "explanation": "explain why its the correct option",
-  "multipleCorrectAnswers": "true"
-}
-```
+### Quiz Invitation:
+- Proactively offer quizzes with engaging language:
+- "Ready to test your understanding of [topic] with a comprehensive quiz?"
+- "How about we check your mastery of these concepts with some practice questions?"
+- "Would you like to take a quiz covering everything we've discussed about [topic]?"
 
-**Quiz Guidelines:**
-- `correctOption`: Use "1", "2", "3", etc. to indicate the correct answer by position
-- `multipleCorrectAnswers`: Set to "true" if multiple answers are correct, "false" otherwise
-- Generate 1-3 questions per quiz session
-- Match question difficulty to the student's demonstrated level
-- Include a mix of recall, comprehension, and application questions
-- Provide clear, educational explanations for correct answers
-
-## Rules:
-- JSON tool calls should be single objects embedded in the response
-- Only one tool call per response
-- Always maintain an encouraging, supportive tone
-- Adapt your teaching approach based on student responses and engagement level
-- Celebrate correct answers and provide constructive feedback for incorrect ones
-- Use quizzes as learning tools, not just assessments
-'''
+## Response Guidelines:
+- Maintain encouraging, supportive communication
+- Provide constructive feedback for improvement
+- Use quizzes to guide future teaching
+- Celebrate learning progress and effort
+- Encourage questions and curiosity beyond the quiz content''' 
 
 class Agent:
     def __init__(self):
@@ -73,26 +59,69 @@ class Agent:
             model="gemini-2.0-flash",
             temperature=0.7,
         )
-        self.llm = model.bind_tools([generate_image])
+        
+        self.llm = model.bind_tools([generate_image, generate_quiz])
+        
         self.memory = ConversationBufferMemory(
             memory_key="chat_history",
             return_messages=True
         )
-        self.memory.chat_memory.add_message(SystemMessage(content = SYSTEM_PROMPT))
+        self.memory.chat_memory.add_message(SystemMessage(content=SYSTEM_PROMPT))
     
+    def format_quiz_report_summary(self, quiz_report: list) -> str:
+        """Format quiz results for processing"""
+        total_questions = len(quiz_report)
+        correct_answers = sum(1 for ans in quiz_report if ans['isCorrect'])
+        score_percentage = (correct_answers / total_questions) * 100 if total_questions > 0 else 0
+        
+        summary = f"Quiz Results Summary:\n"
+        summary += f"Score: {correct_answers}/{total_questions} ({score_percentage:.1f}%)\n\n"
+        summary += "Detailed Results:\n"
+        
+        for ans in quiz_report:
+            status = "✓ Correct" if ans['isCorrect'] else "✗ Incorrect"
+            summary += f"Q{ans['questionNumber']}: {status}\n"
+            summary += f"  User Answer: {ans['userAnswer']}\n"
+            summary += f"  Correct Answer: {ans['correctAnswer']}\n"
+            if not ans['isCorrect']:
+                summary += f"  Explanation: {ans.get('explanation', 'No explanation provided')}\n"
+            summary += "\n"
+        
+        summary += "Please provide feedback on the student's performance and suggest areas for improvement."
+        return summary
+
     async def process_query(self, user_input: Union[str, dict]) -> dict:
+        """Process user query and return response"""
         text = ""
         image_b64 = None
+        quiz_report = None
 
         if isinstance(user_input, dict):
             text = user_input.get("text", "").strip()
             image_b64 = user_input.get("image_base64")
+            quiz_report = user_input.get("quizReport")
         else:
             text = str(user_input).strip()
-            image_b64 = None
+
+        if quiz_report:
+            try:
+                quiz_summary = self.format_quiz_report_summary(quiz_report)
+                messages = self.memory.chat_memory.messages.copy()
+                messages.append(HumanMessage(content=quiz_summary))
+                
+                response = await self.llm.ainvoke(messages)
+                explanation = response.content
+                
+                self.memory.chat_memory.add_user_message(quiz_summary)
+                self.memory.chat_memory.add_ai_message(explanation)
+                
+                return {"text": explanation, "image": "", "quiz": None}
+                
+            except Exception as e:
+                return {"text": f"Error processing quiz results: {str(e)}", "image": "", "quiz": None}
 
         if not text:
-            return {"text": "Please provide a question or topic you'd like to learn about.", "image": ""}
+            return {"text": "Please provide a question or topic you'd like to learn about.", "image": "", "quiz": None}
 
         try:
             messages = self.memory.chat_memory.messages.copy()
@@ -110,33 +139,40 @@ class Agent:
             response = await self.llm.ainvoke(messages)
             explanation = response.content
 
+            generated_image = ""
+            quiz_data = None
+            
             if hasattr(response, "tool_calls") and response.tool_calls:
-                tool = response.tool_calls[0]
-                tool_name = tool.get("name")
-                tool_params = tool.get("args", {})
+                for tool_call in response.tool_calls:
+                    tool_name = tool_call.get("name")
+                    tool_params = tool_call.get("args", {})
 
-                if isinstance(tool_params, str):
-                    try:
-                        tool_params = json.loads(tool_params)
-                    except json.JSONDecodeError:
-                        tool_params = {}
+                    if tool_name == "generate_image" and "description" in tool_params:
+                        try:
+                            generated_image = generate_image.invoke({"description": tool_params["description"]}) or ""
+                        except Exception as e:
+                            print(f"Error generating image: {e}")
+                    
+                    elif tool_name == "generate_quiz":
+                        try:
+                            jsonData = generate_quiz.invoke({"content": tool_params["content"]})
+                            if 'error' not in jsonData:
+                                quiz_data = jsonData
+                        except Exception as e:
+                            print(f"Error processing quiz: {e}")
 
-                if tool_name == "generate_image" and "description" in tool_params:
-                    description = tool_params["description"]
-                    result_b64 = generate_image.invoke({"description": description})
-
-                    self.memory.chat_memory.add_user_message(HumanMessage(content=text))
-                    self.memory.chat_memory.add_ai_message(explanation)
-
-                    return {
-                        "text": explanation,
-                        "image": result_b64 or ""
-                    }
-
-            self.memory.chat_memory.add_user_message(HumanMessage(content=text))
+            self.memory.chat_memory.add_user_message(text)
             self.memory.chat_memory.add_ai_message(explanation)
 
-            return {"text": explanation, "image": ""}
+            return {
+                "text": explanation,
+                "image": generated_image,
+                "quiz": quiz_data
+            }
 
         except Exception as e:
-            return {"text": f"Error: {str(e)}", "image": ""}
+            return {
+                "text": f"Error: {str(e)}", 
+                "image": "", 
+                "quiz": None
+            }

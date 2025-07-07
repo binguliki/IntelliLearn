@@ -19,6 +19,8 @@ const ChatPage = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [imageBase64, setImageBase64] = useState(null);
+  const [pendingQuiz, setPendingQuiz] = useState(null);
+  const [pendingQuizMsg, setPendingQuizMsg] = useState(null);
 
   let sessionId = localStorage.getItem('session_id');
   if (!sessionId) {
@@ -113,9 +115,15 @@ const ChatPage = () => {
         text: botText || 'Sorry, there was an error.',
         sender: 'bot',
         timestamp: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
-        image: data.image ? `data:image/png;base64,${data.image}` : null
+        image: data.image ? `data:image/png;base64,${data.image}` : null,
+        quiz: data.quiz || null
       };
-      setMessages(prev => [...prev, botResponse]);
+      if (data.quiz) {
+        setPendingQuiz(data.quiz);
+        setPendingQuizMsg(botResponse);
+      } else {
+        setMessages(prev => [...prev, botResponse]);
+      }
     } catch (err) {
       console.error("Error sending message:", err);
       setMessages(prev => [...prev, {
@@ -127,6 +135,41 @@ const ChatPage = () => {
     } finally {
       setIsTyping(false);
       setImageBase64(null);
+    }
+  };
+
+  // Quiz completion handler
+  const handleQuizComplete = async (quizReport) => {
+    setPendingQuiz(null);
+    setPendingQuizMsg(null);
+    setIsTyping(true);
+    // Show the quiz message in chat
+    setMessages(prev => [...prev, { ...pendingQuizMsg, quiz: pendingQuiz }]);
+    try {
+      const res = await fetch('http://localhost:8000/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ quizReport })
+      });
+      const data = await res.json();
+      // Only show further feedback if the backend provides additional text
+      if (data.text && data.text.trim()) {
+        setMessages(prev => [...prev, {
+          id: prev.length + 1,
+          text: data.text,
+          sender: 'bot',
+          timestamp: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+        }]);
+      }
+    } catch (err) {
+      setMessages(prev => [...prev, {
+        id: prev.length + 1,
+        text: `Error submitting quiz: ${err.message}`,
+        sender: 'bot',
+        timestamp: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+      }]);
+    } finally {
+      setIsTyping(false);
     }
   };
 
@@ -166,8 +209,11 @@ const ChatPage = () => {
       <div className="max-w-2xl mx-auto h-[calc(100vh-120px)] flex flex-col relative">
         <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-white pb-24 scrollbar-none" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
           {messages.map((message) => (
-            <ChatMessage key={message.id} message={message} />
+            <ChatMessage key={message.id} message={message} onQuizComplete={handleQuizComplete} />
           ))}
+          {pendingQuiz && pendingQuizMsg && (
+            <ChatMessage key={pendingQuizMsg.id} message={{ ...pendingQuizMsg, quiz: pendingQuiz }} onQuizComplete={handleQuizComplete} />
+          )}
           {isTyping && <TypingIndicator />}
           <div ref={messagesEndRef} />
         </div>
