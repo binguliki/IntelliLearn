@@ -1,9 +1,12 @@
+import os
+import base64
+import json
+
 from langchain.tools import tool
+from typing import Optional, Dict
 from google import genai
 from google.genai.types import GenerateContentConfig, Content, Part
 from dotenv import load_dotenv
-import base64
-import os
 
 load_dotenv()
 
@@ -66,3 +69,80 @@ def generate_image(description: str) -> str:
     
     except Exception as e:
         return f"Error generating image: {str(e)}"
+
+# Helper functions  
+def parse_quiz_json(json_string: str) -> Optional[Dict]:
+    """Parse and validate quiz JSON string"""
+    try:
+        json_string = json_string.strip()
+        quiz_data = json.loads(json_string)
+        
+        if is_valid_quiz_json(quiz_data):
+            return quiz_data
+        return None
+    except json.JSONDecodeError:
+        return None
+    
+
+def is_valid_quiz_json(data: Dict) -> bool:
+    """Validate quiz JSON structure"""
+    try:
+        required_fields = ['quizTitle', 'totalQuestions', 'questions']
+        if not all(field in data for field in required_fields):
+            return False
+        
+        if not isinstance(data['questions'], list) or len(data['questions']) == 0:
+            return False
+        
+        first_question = data['questions'][0]
+        question_fields = ['questionNumber', 'question', 'options', 'correctOption', 'explanation']
+        if not all(field in first_question for field in question_fields):
+            return False
+        
+        return True
+    except:
+        return False
+
+
+@tool
+def generate_quiz(content: str) -> Dict:
+    """
+    Generate and validate quiz JSON from content string.
+
+    Args:
+        content: JSON string containing quiz data in the format:
+        {
+            "content": "Any additional text, encouragement, or instructions you want to include",
+            "quizTitle": "descriptive title for the quiz",
+            "totalQuestions": 2,
+            "questions": [
+                {
+                    "questionNumber": 1,
+                    "question": "the question text",
+                    "options": ["option A", "option B", "option C", "option D"],
+                    "correctOption": "2",
+                    "explanation": "detailed explanation of why this is correct and why other options are wrong",
+                    "multipleCorrectAnswers": false
+                },
+                {
+                    "questionNumber": 2,
+                    "question": "another question",
+                    "options": ["option A", "option B", "option C"],
+                    "correctOption": "1,3",
+                    "explanation": "explanation for multiple correct answers",
+                    "multipleCorrectAnswers": true
+                }
+            ]
+        }
+            
+    Returns:
+        Dict: Validated quiz data or error message
+    """
+    try:
+        quiz_data = parse_quiz_json(content)
+        if quiz_data:
+            return quiz_data
+        else:
+            return {"error": "Invalid quiz JSON structure"}
+    except Exception as e:
+        return {"error": f"Error processing quiz: {str(e)}"}

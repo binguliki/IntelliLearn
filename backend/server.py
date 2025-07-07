@@ -37,6 +37,11 @@ async def chat_endpoint(request: Request):
     message = data.get("message")
     image_base64 = data.get("image_base64", None)
     session_id = data.get("session_id")
+    quiz_report = data.get("quizReport")
+
+    if quiz_report:
+        response = await agent.process_query({"quizReport": quiz_report})
+        return response
 
     if not message or not session_id:
         return {"error": "Message and session_id required"}
