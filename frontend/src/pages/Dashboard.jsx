@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { Button } from "../components/ui/button";
 import { ChevronDown } from 'lucide-react';
+import Orb from "@/components/ui/orb";
 
 const Dashboard = ({ isAuthenticated }) => {
   const [show, setShow] = useState(false);
@@ -12,11 +13,19 @@ const Dashboard = ({ isAuthenticated }) => {
   }, []);
 
   return (
+    <>
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 animate-gradient-x">
       <Navbar isAuthenticated={isAuthenticated} />
       {/* Hero Section */}
       <section className={`flex flex-col items-center justify-center text-center px-4 pt-24 min-h-screen transition-opacity duration-1000 ${show ? 'opacity-100' : 'opacity-0'}`}> 
-        <h1 className="text-5xl md:text-6xl font-extrabold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-6 drop-shadow-lg">Welcome to IntelliLearn</h1>
+        <div className="flex items-center justify-center">
+          <div className="grid place-items-center">
+            <div className="col-start-1 row-start-1 scale-150">
+              <Orb/>
+            </div>
+            <h1 className="col-start-1 row-start-1 text-5xl md:text-6xl font-extrabold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-6 drop-shadow-lg">Welcome to IntelliLearn</h1>
+          </div>
+        </div>
         <p className="text-lg md:text-2xl text-gray-700 mb-8 max-w-2xl mx-auto">
           IntelliLearn is an AI-powered classroom assistant designed to support you in your academics and daily tasks, making learning more personalized, efficient, and stress-free.
         </p>
@@ -65,6 +74,8 @@ const Dashboard = ({ isAuthenticated }) => {
         </div>
       </section>
     </div>
+    </>
+    
   );
 };
 
