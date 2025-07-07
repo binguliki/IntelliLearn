@@ -2,8 +2,8 @@ import { useEffect, useRef } from "react";
 import { Renderer, Program, Mesh, Triangle, Vec3 } from "ogl";
 
 export default function Orb({
-  hue = 0,
-  hoverIntensity = 0.2,
+  hue = 0.5,
+  hoverIntensity = 0.6,
   rotateOnHover = true,
   forceHoverState = false,
 }) {

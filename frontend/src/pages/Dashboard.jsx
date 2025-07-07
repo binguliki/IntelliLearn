@@ -20,13 +20,13 @@ const Dashboard = ({ isAuthenticated }) => {
       <section className={`flex flex-col items-center justify-center text-center px-4 pt-24 min-h-screen transition-opacity duration-1000 ${show ? 'opacity-100' : 'opacity-0'}`}> 
         <div className="flex items-center justify-center">
           <div className="grid place-items-center">
-            <div className="col-start-1 row-start-1 scale-150">
+            <div className="col-start-1 row-start-1 scale-[5] opacity-80 transform translate-y-34">
               <Orb/>
             </div>
             <h1 className="col-start-1 row-start-1 text-5xl md:text-6xl font-extrabold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-6 drop-shadow-lg">Welcome to IntelliLearn</h1>
           </div>
         </div>
-        <p className="text-lg md:text-2xl text-gray-700 mb-8 max-w-2xl mx-auto">
+        <p className="text-lg md:text-2xl text-gray-700 mb-8 max-w-2xl mx-auto z-10">
           IntelliLearn is an AI-powered classroom assistant designed to support you in your academics and daily tasks, making learning more personalized, efficient, and stress-free.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
