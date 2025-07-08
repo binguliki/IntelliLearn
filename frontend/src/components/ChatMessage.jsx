@@ -52,8 +52,13 @@ const ChatMessage = ({ message, onQuizComplete }) => {
                   </CardContent>
                 </Card>
               </DialogTrigger>
-              <DialogContent>
-                <ReactMarkdown>{message.text}</ReactMarkdown>
+              <DialogContent className="max-w-4xl w-[90vw] max-h-[80vh]">
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Full Message</h3>
+                  <div className="prose prose-sm max-w-none overflow-auto max-h-[60vh] pr-2">
+                    <ReactMarkdown>{message.text}</ReactMarkdown>
+                  </div>
+                </div>
               </DialogContent>
             </Dialog>
           ) : (
