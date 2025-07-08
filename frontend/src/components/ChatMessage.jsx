@@ -25,10 +25,10 @@ const ChatMessage = ({ message, onQuizComplete }) => {
       </Avatar>
       <div className={`max-w-xs lg:max-w-md ${isBot ? '' : 'text-left'}`}>
         <div
-          className={`inline-block px-4 py-2 rounded-xl shadow-sm text-sm font-sans ${
+          className={`inline-block px-4 py-3 rounded-2xl shadow-lg text-sm font-medium backdrop-blur-sm transition-all duration-200 hover:shadow-xl ${
             isBot
-              ? 'bg-white border border-gray-200 text-gray-800'
-              : 'bg-gray-50 border border-blue-100 text-gray-900'
+              ? 'bg-gradient-to-br from-white to-gray-50 border border-gray-200/60 text-gray-800 shadow-gray-200/50'
+              : 'bg-gradient-to-br from-blue-500 to-blue-600 border border-blue-400/30 text-white shadow-blue-500/30'
           }`}
         >
           {message.image && (
@@ -41,12 +41,20 @@ const ChatMessage = ({ message, onQuizComplete }) => {
           {isLongMessage ? (
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
-                <Card className="cursor-pointer hover:shadow-md transition-shadow max-w-xs">
-                  <CardContent className="p-2">
-                    <p className="leading-relaxed break-words line-clamp-3 text-sm max-h-16 overflow-hidden text-ellipsis">
+                <Card className={`cursor-pointer hover:shadow-lg transition-all duration-200 max-w-xs ${
+                  isBot 
+                    ? 'bg-gradient-to-br from-white to-gray-50 border-gray-200/60 hover:border-gray-300/60' 
+                    : 'bg-gradient-to-br from-blue-500 to-blue-600 border-blue-400/30 hover:border-blue-300/50 text-white'
+                }`}>
+                  <CardContent className="p-3">
+                    <p className={`leading-relaxed break-words line-clamp-3 text-sm max-h-16 overflow-hidden text-ellipsis ${
+                      isBot ? 'text-gray-800' : 'text-white'
+                    }`}>
                       {message.text}
                     </p>
-                    <span className="text-blue-500 text-xs mt-1 block">
+                    <span className={`text-xs mt-2 block font-medium ${
+                      isBot ? 'text-blue-500' : 'text-blue-100'
+                    }`}>
                       Click to read more
                     </span>
                   </CardContent>
