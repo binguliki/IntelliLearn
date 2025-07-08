@@ -65,7 +65,6 @@ const Dashboard = ({ isAuthenticated }) => {
               height="100%"
               src="https://www.youtube.com/embed/QlYrNC_1Xmk"
               title="IntelliLearn Demo Video"
-              frameBorder="0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
               className="w-full h-full"

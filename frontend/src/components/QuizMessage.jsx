@@ -84,7 +84,7 @@ const QuizMessage = ({ message, onQuizComplete }) => {
           </AvatarFallback>
         </Avatar>
         <div className={`max-w-xs lg:max-w-md ${isBot ? '' : 'text-left'}`}>
-          <div className="inline-block px-6 py-4 rounded-2xl shadow-lg text-base font-sans bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 border border-indigo-700 text-gray-100 flex flex-col items-center gap-2">
+          <div className="px-6 py-4 rounded-2xl shadow-lg text-base font-sans bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 border border-indigo-700 text-gray-100 flex flex-col items-center gap-2">
             <div className="flex items-center gap-2 mb-1">
               <CheckCircle className="w-6 h-6 text-green-400" />
               <span className="text-lg font-extrabold bg-gradient-to-r from-indigo-400 via-purple-400 to-fuchsia-500 bg-clip-text text-transparent">Quiz completed!</span>
