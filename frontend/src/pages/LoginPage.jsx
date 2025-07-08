@@ -18,18 +18,16 @@ const LoginPage = ({ isAuthenticated, setIsAuthenticated }) => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-4">
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-400/10 via-purple-400/10 to-pink-400/10"></div>
-      <Card className
-      ="w-full max-w-md relative backdrop-blur-sm bg-white/80 border-white/20 shadow-2xl">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-4">
+      <Card className="w-full max-w-md relative backdrop-blur-sm bg-gray-900/80 border-gray-700 shadow-2xl">
         <CardHeader className="text-center space-y-4">
           <div className="mx-auto w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
             <MessageCircle className="w-8 h-8 text-white" />
           </div>
-          <CardTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          <CardTitle className="text-2xl font-bold bg-gradient-to-r from-indigo-400 via-purple-400 to-fuchsia-500 bg-clip-text text-transparent">
             Welcome Back
           </CardTitle>
-          <CardDescription className="text-gray-600">
+          <CardDescription className="text-gray-300">
             Sign in to your IntelliLearn account
           </CardDescription>
         </CardHeader>
@@ -43,7 +41,7 @@ const LoginPage = ({ isAuthenticated, setIsAuthenticated }) => {
                   placeholder="Email"
                   value={loginData.email}
                   onChange={(e) => setLoginData({...loginData, email: e.target.value})}
-                  className="pl-10 h-12 transition-all focus:ring-2 focus:ring-blue-500"
+                  className="pl-10 h-12 border border-gray-700 bg-gray-800 text-gray-100 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-400"
                   required
                 />
               </div>
@@ -56,7 +54,7 @@ const LoginPage = ({ isAuthenticated, setIsAuthenticated }) => {
                   placeholder="Password"
                   value={loginData.password}
                   onChange={(e) => setLoginData({...loginData, password: e.target.value})}
-                  className="pl-10 h-12 transition-all focus:ring-2 focus:ring-blue-500"
+                  className="pl-10 h-12 border border-gray-700 bg-gray-800 text-gray-100 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-400"
                   required
                 />
               </div>
@@ -68,8 +66,8 @@ const LoginPage = ({ isAuthenticated, setIsAuthenticated }) => {
               Sign In
             </Button>
             <div className="text-center mt-4">
-              <span className="text-gray-600">Don't have an account? </span>
-              <a href="/signup" className="text-blue-600 hover:underline">Sign Up</a>
+              <span className="text-gray-300">Don't have an account? </span>
+              <a href="/signup" className="text-indigo-400 hover:underline">Sign Up</a>
             </div>
           </form>
         </CardContent>

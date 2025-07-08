@@ -13,20 +13,36 @@ const ChatPage = () => {
   });
   const [newMessage, setNewMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const [isBackendReady, setIsBackendReady] = useState(false);
+  const [isBackendReady, setIsBackendReady] = useState(true);
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [imageBase64, setImageBase64] = useState(null);
-  const [pendingQuiz, setPendingQuiz] = useState(null);
-  const [pendingQuizMsg, setPendingQuizMsg] = useState(null);
+  const [micError, setMicError] = useState("");
 
   let sessionId = localStorage.getItem('session_id');
   if (!sessionId) {
     sessionId = crypto.randomUUID();
     localStorage.setItem('session_id', sessionId);
   }
+  
+  const {
+    isRecording,
+    isTranscribing,
+    waveformBuffer,
+    startRecording,
+    stopRecording,
+    renderWaveform,
+  } = useAudioRecording(sessionId);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, isTyping]);
 
   useEffect(() => {
     const checkBackendReady = async () => {
@@ -43,134 +59,70 @@ const ChatPage = () => {
     checkBackendReady();
   }, []);
 
-  const {
-    isRecording,
-    isTranscribing,
-    waveformBuffer,
-    startRecording,
-    stopRecording,
-    processAudioRecording,
-    renderWaveform,
-  } = useAudioRecording(sessionId);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages, isTyping]);
-
   useEffect(() => {
     localStorage.setItem('chat_messages', JSON.stringify(messages));
   }, [messages]);
 
-  const handleSendMessage = async (e) => {
-    e.preventDefault();
-    if (!newMessage.trim() && !selectedFile) return;
-  
+  const handleSendMessage = ({ text, file, previewUrl, imageBase64, reset }) => {
+    if (!text.trim() && !file) return;
     let userMessage = {
       id: messages.length + 1,
-      text: newMessage,
+      text: text,
       sender: 'user',
       timestamp: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
       image: previewUrl ? previewUrl : null
     };
     setMessages(prev => [...prev, userMessage]);
-  
-    setNewMessage('');
-    setSelectedFile(null);
-    setPreviewUrl(null);
-  
+    reset();
     setIsTyping(true);
-  
-    try {
-      const imageMimeType = selectedFile ? selectedFile.type : null;
-  
-      const payload = {
-        message: newMessage,
-        session_id: sessionId,
-        image_base64: imageBase64,
-        image_mime_type: imageMimeType
-      };
-  
-      const res = await fetch('http://localhost:8000/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-  
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(`Server error: ${res.status} ${res.statusText} - ${errorData.detail || JSON.stringify(errorData)}`);
-      }
-  
-      const data = await res.json();
-      let botText = data.text;
-      if (typeof botText === 'object') {
-        botText = JSON.stringify(botText);
-      }
-      const botResponse = {
-        id: messages.length + 2,
-        text: botText || 'Sorry, there was an error.',
-        sender: 'bot',
-        timestamp: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
-        image: data.image ? `data:image/png;base64,${data.image}` : null,
-        quiz: data.quiz || null
-      };
-      if (data.quiz) {
-        setPendingQuiz(data.quiz);
-        setPendingQuizMsg(botResponse);
-      } else {
-        setMessages(prev => [...prev, botResponse]);
-      }
-    } catch (err) {
-      console.error("Error sending message:", err);
-      setMessages(prev => [...prev, {
-        id: messages.length + 2,
-        text: `Error contacting server: ${err.message}`,
-        sender: 'bot',
-        timestamp: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
-      }]);
-    } finally {
-      setIsTyping(false);
-      setImageBase64(null);
-    }
-  };
 
-  // Quiz completion handler
-  const handleQuizComplete = async (quizReport) => {
-    setPendingQuiz(null);
-    setPendingQuizMsg(null);
-    setIsTyping(true);
-    // Show the quiz message in chat
-    setMessages(prev => [...prev, { ...pendingQuizMsg, quiz: pendingQuiz }]);
-    try {
-      const res = await fetch('http://localhost:8000/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ quizReport })
-      });
-      const data = await res.json();
-      // Only show further feedback if the backend provides additional text
-      if (data.text && data.text.trim()) {
+    const imageMimeType = file ? file.type : null;
+    const payload = {
+      message: text,
+      session_id: sessionId,
+      image_base64: imageBase64,
+      image_mime_type: imageMimeType
+    };
+    fetch('http://localhost:8000/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+      .then(async res => {
+        if (!res.ok) {
+          const errorData = await res.json();
+          throw new Error(`Server error: ${res.status} ${res.statusText} - ${errorData.detail || JSON.stringify(errorData)}`);
+        }
+        return res.json();
+      })
+      .then(data => {
+        let botText = data.text;
+        if (typeof botText === 'object') {
+          botText = JSON.stringify(botText);
+        }
+        const botResponse = {
+          id: messages.length + 2,
+          text: botText || 'Sorry, there was an error.',
+          sender: 'bot',
+          timestamp: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+          image: data.image ? `data:image/png;base64,${data.image}` : null,
+          quiz: data.quiz || null,
+          quizCompleted: false,
+          quizReport: null
+        };
+        setMessages(prev => [...prev, botResponse]);
+      })
+      .catch(err => {
         setMessages(prev => [...prev, {
-          id: prev.length + 1,
-          text: data.text,
+          id: messages.length + 2,
+          text: `Error contacting server: ${err.message}`,
           sender: 'bot',
           timestamp: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
         }]);
-      }
-    } catch (err) {
-      setMessages(prev => [...prev, {
-        id: prev.length + 1,
-        text: `Error submitting quiz: ${err.message}`,
-        sender: 'bot',
-        timestamp: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
-      }]);
-    } finally {
-      setIsTyping(false);
-    }
+      })
+      .finally(() => {
+        setIsTyping(false);
+      });
   };
 
   const handleFileChange = (e) => {
@@ -195,41 +147,104 @@ const ChatPage = () => {
     setNewMessage(transcribedText);
   };
 
+  const handleMicClick = async () => {
+    setMicError("");
+    if (isRecording) {
+      stopRecording();
+      return;
+    }
+    try {
+      await startRecording(handleTranscriptionComplete);
+    } catch (err) {
+      setMicError("Microphone access denied or unavailable. Please check your browser settings.");
+      console.error("Mic error:", err);
+    }
+  };
+
+  const handleQuizComplete = async (quizReport, quizMessageId) => {
+    // Update the quiz message in messages to mark as completed and store the report
+    setMessages(prev => prev.map(msg =>
+      msg.id === quizMessageId
+        ? { ...msg, quizCompleted: true, quizReport }
+        : msg
+    ));
+    setIsTyping(true);
+    try {
+      const res = await fetch('http://localhost:8000/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ quizReport })
+      });
+      const data = await res.json();
+      if (data.text && data.text.trim()) {
+        setMessages(prev => [...prev, {
+          id: prev.length + 1,
+          text: data.text,
+          sender: 'bot',
+          timestamp: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+        }]);
+      }
+    } catch (err) {
+      setMessages(prev => [...prev, {
+        id: prev.length + 1,
+        text: `Error submitting quiz: ${err.message}`,
+        sender: 'bot',
+        timestamp: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+      }]);
+    } finally {
+      setIsTyping(false);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-white font-sans pt-16">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 font-sans pt-16">
       {!isBackendReady && (
-        <div className="fixed inset-0 bg-white bg-opacity-90 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-gray-900 bg-opacity-95 flex items-center justify-center z-50">
           <div className="text-center">
-            <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-gray-600">Initializing backend...</p>
+            <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-gray-300">Initializing backend...</p>
           </div>
         </div>
       )}
-      
-      <div className="max-w-2xl mx-auto h-[calc(100vh-120px)] flex flex-col relative">
-        <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-white pb-24 scrollbar-none" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+      <div className="w-full flex flex-col items-center relative z-10">
+        <div className="flex-1 w-full max-w-3xl overflow-y-auto p-4 space-y-4 pb-24 scrollbar-none mx-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
           {messages.map((message) => (
-            <ChatMessage key={message.id} message={message} onQuizComplete={handleQuizComplete} />
+            message.quiz ? (
+              <ChatMessage key={message.id} message={message} onQuizComplete={(report) => handleQuizComplete(report, message.id)} />
+            ) : (
+              <ChatMessage key={message.id} message={message} onQuizComplete={handleQuizComplete} />
+            )
           ))}
-          {pendingQuiz && pendingQuizMsg && (
-            <ChatMessage key={pendingQuizMsg.id} message={{ ...pendingQuizMsg, quiz: pendingQuiz }} onQuizComplete={handleQuizComplete} />
-          )}
           {isTyping && <TypingIndicator />}
           <div ref={messagesEndRef} />
         </div>
-
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-full max-w-2xl px-4 z-20">
-          <form onSubmit={handleSendMessage} className={`flex space-x-2 bg-white border border-gray-200 rounded-xl shadow-lg p-3 relative items-center ${!isBackendReady ? 'opacity-50 pointer-events-none' : ''}`}>
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-full max-w-3xl px-4 z-20">
+          {/* ChatInput code inlined here */}
+          <form onSubmit={e => {
+            e.preventDefault();
+            handleSendMessage({
+              text: newMessage,
+              file: selectedFile,
+              previewUrl,
+              imageBase64,
+              reset: () => {
+                setNewMessage('');
+                setSelectedFile(null);
+                setPreviewUrl(null);
+                setImageBase64(null);
+              }
+            });
+          }} className={`flex space-x-2 bg-gray-800/95 border border-gray-700 rounded-xl shadow-lg p-3 relative items-center ${!isBackendReady ? 'opacity-50 pointer-events-none' : ''}`}>
             <div className="relative">
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={!isBackendReady}
-                className="flex items-center justify-center h-10 w-10 rounded-l-xl text-blue-500 bg-white border-none shadow-none transition-colors focus:outline-none focus:ring-0 focus:border-none active:outline-none active:ring-0 active:border-none hover:bg-blue-50 disabled:opacity-50"
+                className="flex items-center justify-center h-10 w-10 rounded-l-xl text-gray-400 bg-gray-800 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-700 hover:bg-gray-700 disabled:opacity-50"
                 style={{ marginRight: '-0.5rem', borderTopRightRadius: 0, borderBottomRightRadius: 0 }}
                 tabIndex={-1}
               >
-                <Paperclip className="w-5 h-5" />
+                <Paperclip className="w-5 h-5 text-gray-300" />
               </button>
             </div>
             <input
@@ -242,9 +257,9 @@ const ChatPage = () => {
             <div className="relative">
               <button
                 type="button"
-                onClick={isRecording ? stopRecording : () => startRecording(handleTranscriptionComplete)}
+                onClick={handleMicClick}
                 disabled={isTranscribing || !isBackendReady}
-                className={`flex items-center justify-center h-10 w-10 rounded-l-none rounded bg-white text-blue-500 border-none shadow-none transition-all duration-200 focus:outline-none focus:ring-0 focus:border-none active:outline-none active:ring-0 active:border-none ${
+                className={`flex items-center justify-center h-10 w-10 rounded-l-none rounded bg-gray-800 text-gray-400 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-700 transition-all duration-200 ${
                   isTranscribing || !isBackendReady ? 'opacity-50 cursor-not-allowed' : ''}`}
                 style={{
                   marginRight: '-0.5rem',
@@ -255,18 +270,19 @@ const ChatPage = () => {
               >
                 {isTranscribing ? (
                   <div className="relative z-10">
-                    <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+                    <div className="w-4 h-4 border-2 border-gray-300 border-t-transparent rounded-full animate-spin mx-auto"></div>
                   </div>
                 ) : isRecording ? (
-                  <Square className="w-5 h-5 relative z-10" />
+                  <Square className="w-5 h-5 relative z-10 text-gray-300" />
                 ) : (
-                  <Mic className="w-5 h-5 relative z-10" />
+                  <Mic className="w-5 h-5 relative z-10 text-gray-300" />
                 )}
                 {isRecording && (
                   <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-2.5 h-2.5 bg-red-500 rounded-full z-20 animate-pulse border-2 border-white"></div>
                 )}
               </button>
             </div>
+            {micError && <div className="text-red-400 text-xs ml-2">{micError}</div>}
             {isRecording ? (
               <div className="flex-1 flex items-center min-w-0 h-10 relative" style={{height: '40px'}}>
                 {renderWaveform()}
@@ -280,9 +296,9 @@ const ChatPage = () => {
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     borderless
-                    className="w-full rounded-none px-3 py-2 text-sm bg-white shadow-none"
+                    className="w-full rounded-none px-3 py-2 text-sm bg-gray-900 text-gray-100 shadow-none"
                     disabled={isTranscribing || !isBackendReady}
-                    style={{ position: 'relative', zIndex: 1, background: 'white' }}
+                    style={{ position: 'relative', zIndex: 1, background: 'transparent' }}
                   />
                 </div>
                 {selectedFile && (
@@ -298,7 +314,7 @@ const ChatPage = () => {
                 <Button
                   type="submit"
                   size="sm"
-                  className="w-9 h-9 p-0 bg-blue-500 hover:bg-blue-600 text-white rounded-r-xl shadow-none"
+                  className="w-9 h-9 p-0 bg-indigo-600 hover:bg-indigo-700 text-white rounded-r-xl shadow-none"
                   disabled={(!newMessage.trim() && !selectedFile) || isTranscribing || !isBackendReady}
                 >
                   <Send className="w-4 h-4" />
