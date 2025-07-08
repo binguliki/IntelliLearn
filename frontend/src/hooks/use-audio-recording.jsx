@@ -14,7 +14,7 @@ export const useAudioRecording = (sessionId) => {
   const animationFrameRef = useRef(null);
   
   const { toast } = useToast();
-  const WAVEFORM_BARS = 110;
+  const WAVEFORM_BARS = 120;
 
   // Function to convert webm to wav
   const convertWebmToWav = async (webmBlob) => {
