@@ -5,6 +5,7 @@ import { Send, Paperclip, Mic, Square } from 'lucide-react';
 import { useAudioRecording } from "../hooks/use-audio-recording.jsx";
 import ChatMessage from "../components/ChatMessage";
 import TypingIndicator from "../components/TypingIndicator";
+import Particles from '../components/ui/particles';
 
 const ChatPage = () => {
   const [messages, setMessages] = useState(() => {
@@ -162,7 +163,6 @@ const ChatPage = () => {
   };
 
   const handleQuizComplete = async (quizReport, quizMessageId) => {
-    // Update the quiz message in messages to mark as completed and store the report
     setMessages(prev => prev.map(msg =>
       msg.id === quizMessageId
         ? { ...msg, quizCompleted: true, quizReport }
@@ -198,10 +198,23 @@ const ChatPage = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 font-sans pt-16">
+      
       {!isBackendReady && (
         <div className="fixed inset-0 bg-gray-900 bg-opacity-95 flex items-center justify-center z-50">
           <div className="text-center">
             <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <div style={{ width: '100%', height: '100vh', position: 'absolute', top: 0, left: 0, zIndex: 0, transform: 'scale(0.8)' }}>
+            <Particles
+              particleColors={['#ffffff', '#ffffff']}
+              particleCount={500}
+              particleSpread={8}
+              speed={0.1}
+              particleBaseSize={50}
+              moveParticlesOnHover={true}
+              alphaParticles={false}
+              disableRotation={false}
+            />
+          </div>
             <p className="text-gray-300">Initializing backend...</p>
           </div>
         </div>
@@ -219,7 +232,6 @@ const ChatPage = () => {
           <div ref={messagesEndRef} />
         </div>
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-full max-w-3xl px-4 z-20">
-          {/* ChatInput code inlined here */}
           <form onSubmit={e => {
             e.preventDefault();
             handleSendMessage({

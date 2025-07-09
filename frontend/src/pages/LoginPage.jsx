@@ -4,6 +4,7 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { MessageCircle, Mail, Lock } from 'lucide-react';
+import { BackgroundBeams } from '@/components/ui/background-beams';
 
 const LoginPage = ({ isAuthenticated, setIsAuthenticated }) => {
   const [loginData, setLoginData] = useState({ email: '', password: '' });
@@ -19,6 +20,7 @@ const LoginPage = ({ isAuthenticated, setIsAuthenticated }) => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-4">
+      <BackgroundBeams className="z-0" />
       <Card className="w-full max-w-md relative backdrop-blur-sm bg-gray-900/80 border-gray-700 shadow-2xl">
         <CardHeader className="text-center space-y-4">
           <div className="mx-auto w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
