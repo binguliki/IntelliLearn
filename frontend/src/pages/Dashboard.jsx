@@ -90,7 +90,7 @@ const Dashboard = ({ isAuthenticated }) => {
               <span className="text-white font-bold text-xl">LB</span>
             </div>
             <h4 className="text-xl font-semibold text-gray-100 mb-2">Likhith B.</h4>
-            <p className="text-gray-400 text-sm">Developer</p>
+            <p className="text-gray-400 text-sm">AI/ML Developer</p>
             <Link href = "https://www.linkedin.com/in/bingumalla-likith/"><p className="text-blue-500 underline">Linkedin</p></Link>
           </div>
           
@@ -99,7 +99,7 @@ const Dashboard = ({ isAuthenticated }) => {
               <span className="text-white font-bold text-xl">VT</span>
             </div>
             <h4 className="text-xl font-semibold text-gray-100 mb-2">Vydhika T.</h4>
-            <p className="text-gray-400 text-sm">Developer</p>
+            <p className="text-gray-400 text-sm">Designer and <br></br>Front-end Developer</p>
             <Link href = "https://www.linkedin.com/in/vydhika-talatam/"><p className="text-blue-500 underline">Linkedin</p></Link>
           </div>
           
@@ -108,7 +108,7 @@ const Dashboard = ({ isAuthenticated }) => {
               <span className="text-white font-bold text-xl">IC</span>
             </div>
             <h4 className="text-xl font-semibold text-gray-100 mb-2">Ibrahim C.</h4>
-            <p className="text-gray-400 text-sm">Developer</p>
+            <p className="text-gray-400 text-sm">Full stack Developer</p>
             <Link href = "https://www.linkedin.com/in/ibrahimchikani"><p className="text-blue-500 underline">Linkedin</p></Link>
           </div>
         </div>
