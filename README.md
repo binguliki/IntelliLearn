@@ -10,7 +10,7 @@ The main objective of IntelliLearn is to provide students and educators with an 
 
 ### Frontend
 - JavaScript
-- Next.JS
+- React.JS
 - Tailwind CSS
 
 -> **Front-end dependencies**
