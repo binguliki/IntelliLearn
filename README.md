@@ -39,8 +39,8 @@ The main objective of IntelliLearn is to provide students and educators with an 
 
 ```sh
 cd frontend
-npm install // to install the dependencies onto the local machine
-npm run dev // to run the project locally
+npm install //to install the dependencies onto the local machine
+npm run dev //to run the project locally
 
 cd backend
 uv run server.py
