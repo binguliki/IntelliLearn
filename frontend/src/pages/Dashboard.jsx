@@ -58,7 +58,10 @@ const Dashboard = ({ isAuthenticated }) => {
       </section>
       {/* Video Section */}
       <section id="video-section" className="flex flex-col items-center justify-center py-24 px-4 w-full bg-transparent min-h-screen">
-        <div className="flex flex-1 items-center justify-center w-full">
+        <div className="flex flex-col gap-4 flex-1 items-center justify-center w-full">
+          <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-indigo-400 via-purple-400 to-fuchsia-500 bg-clip-text text-transparent mb-4">
+            Demo Video
+          </h2>
           <div className="w-full max-w-2xl aspect-video rounded-xl overflow-hidden shadow-xl border-2 border-gray-700 bg-gray-900/80 mx-auto">
             <iframe
               width="100%"
@@ -71,10 +74,13 @@ const Dashboard = ({ isAuthenticated }) => {
             ></iframe>
           </div>
         </div>
+        <a href="#team-section" className="mt-16 animate-bounce text-indigo-400 hover:text-fuchsia-400" aria-label="Scroll to video">
+          <ChevronDown className="w-10 h-10 mx-auto" />
+        </a>
       </section>
 
        {/* Team Section */}
-      <section className="flex flex-col items-center justify-center py-24 px-4 w-full bg-transparent min-h-screen">
+      <section id="team-section" className="flex flex-col items-center justify-center py-24 px-4 w-full bg-transparent min-h-screen">
         <div className="text-center mb-12">
           <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-indigo-400 via-purple-400 to-fuchsia-500 bg-clip-text text-transparent mb-4">
             Our Team
@@ -91,7 +97,7 @@ const Dashboard = ({ isAuthenticated }) => {
             </div>
             <h4 className="text-xl font-semibold text-gray-100 mb-2">Likhith B.</h4>
             <p className="text-gray-400 text-sm">AI/ML Developer</p>
-            <Link href = "https://www.linkedin.com/in/bingumalla-likith/"><p className="text-blue-500 underline">Linkedin</p></Link>
+            <Link to = "https://www.linkedin.com/in/bingumalla-likith/"><p className="text-blue-500 underline">Linkedin</p></Link>
           </div>
           
           <div className="bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 text-center border border-gray-700/50 hover:scale-105 hover:bg-gray-700/80">
@@ -100,7 +106,7 @@ const Dashboard = ({ isAuthenticated }) => {
             </div>
             <h4 className="text-xl font-semibold text-gray-100 mb-2">Vydhika T.</h4>
             <p className="text-gray-400 text-sm">Designer and <br></br>Front-end Developer</p>
-            <Link href = "https://www.linkedin.com/in/vydhika-talatam/"><p className="text-blue-500 underline">Linkedin</p></Link>
+            <Link to = "https://www.linkedin.com/in/vydhika-talatam/"><p className="text-blue-500 underline">Linkedin</p></Link>
           </div>
           
           <div className="bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 text-center border border-gray-700/50 hover:scale-105 hover:bg-gray-700/80">
@@ -109,7 +115,7 @@ const Dashboard = ({ isAuthenticated }) => {
             </div>
             <h4 className="text-xl font-semibold text-gray-100 mb-2">Ibrahim C.</h4>
             <p className="text-gray-400 text-sm">Full stack Developer</p>
-            <Link href = "https://www.linkedin.com/in/ibrahimchikani"><p className="text-blue-500 underline">Linkedin</p></Link>
+            <Link to = "https://www.linkedin.com/in/ibrahimchikani"><p className="text-blue-500 underline">Linkedin</p></Link>
           </div>
         </div>
       </section>
