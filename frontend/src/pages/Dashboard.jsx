@@ -72,6 +72,47 @@ const Dashboard = ({ isAuthenticated }) => {
           </div>
         </div>
       </section>
+
+       {/* Team Section */}
+      <section className="flex flex-col items-center justify-center py-24 px-4 w-full bg-transparent min-h-screen">
+        <div className="text-center mb-12">
+          <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-indigo-400 via-purple-400 to-fuchsia-500 bg-clip-text text-transparent mb-4">
+            Our Team
+          </h2>
+          <p className="text-lg text-gray-300 max-w-2xl mx-auto">
+            Meet the talented individuals behind IntelliLearn
+          </p>
+        </div>
+        
+        <div className="flex flex-wrap justify-center gap-8 max-w-4xl mx-auto">
+          <div className="bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 text-center border border-gray-700/50 hover:scale-105 hover:bg-gray-700/80">
+            <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full mx-auto mb-4 flex items-center justify-center">
+              <span className="text-white font-bold text-xl">LB</span>
+            </div>
+            <h4 className="text-xl font-semibold text-gray-100 mb-2">Likhith B.</h4>
+            <p className="text-gray-400 text-sm">Developer</p>
+            <Link href = "https://www.linkedin.com/in/bingumalla-likith/"><p className="text-blue-500 underline">Linkedin</p></Link>
+          </div>
+          
+          <div className="bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 text-center border border-gray-700/50 hover:scale-105 hover:bg-gray-700/80">
+            <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-fuchsia-600 rounded-full mx-auto mb-4 flex items-center justify-center">
+              <span className="text-white font-bold text-xl">VT</span>
+            </div>
+            <h4 className="text-xl font-semibold text-gray-100 mb-2">Vydhika T.</h4>
+            <p className="text-gray-400 text-sm">Developer</p>
+            <Link href = "https://www.linkedin.com/in/vydhika-talatam/"><p className="text-blue-500 underline">Linkedin</p></Link>
+          </div>
+          
+          <div className="bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 text-center border border-gray-700/50 hover:scale-105 hover:bg-gray-700/80">
+            <div className="w-16 h-16 bg-gradient-to-br from-fuchsia-500 to-pink-600 rounded-full mx-auto mb-4 flex items-center justify-center">
+              <span className="text-white font-bold text-xl">IC</span>
+            </div>
+            <h4 className="text-xl font-semibold text-gray-100 mb-2">Ibrahim C.</h4>
+            <p className="text-gray-400 text-sm">Developer</p>
+            <Link href = "https://www.linkedin.com/in/ibrahimchikani"><p className="text-blue-500 underline">Linkedin</p></Link>
+          </div>
+        </div>
+      </section>
     </div>
     </>
     
