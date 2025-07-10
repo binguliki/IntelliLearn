@@ -14,20 +14,26 @@ const Navbar = () => {
     }
   };
 
-  const handleReset = async () => {
+    const handleReset = async () => {
+    const newSessionId = crypto.randomUUID();
+
+    localStorage.setItem('session_id', newSessionId);
     localStorage.removeItem('chat_messages');
     sessionStorage.removeItem('model_initialized');
-    const newSessionId = crypto.randomUUID();
-    localStorage.setItem('session_id', newSessionId);
+
     try {
       await fetch('http://localhost:8000/reset', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ session_id: newSessionId })
       });
-    } catch (e) {}
-    window.location.reload();
+    } catch (e) {
+      console.error("Reset error", e);
+    }
+
+    navigate(location.pathname, { replace: true });
   };
+
 
   return (
     <nav
