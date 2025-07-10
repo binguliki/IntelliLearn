@@ -1,10 +1,16 @@
-import { Avatar, AvatarFallback } from "../components/ui/avatar";
+import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
 import { Bot } from 'lucide-react';
 
 const TypingIndicator = () => {
+  console.log('TypingIndicator rendered with src=/botavatar.svg'); // Debug log
   return (
     <div className="flex items-start space-x-3 animate-fade-in">
       <Avatar className="w-8 h-8 shadow-lg bg-gradient-to-br from-indigo-600 via-purple-700 to-fuchsia-700">
+        <AvatarImage 
+          src="/botavatar.svg" 
+          alt="Bot Avatar" 
+          className="aspect-square h-full w-full object-contain bg-transparent"
+        />
         <AvatarFallback className="text-white">
           <Bot className="w-4 h-4" />
         </AvatarFallback>

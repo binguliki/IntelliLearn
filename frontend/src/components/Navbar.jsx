@@ -1,6 +1,5 @@
 import { Button } from "./ui/button";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { MessageCircle } from 'lucide-react';
 
 const Navbar = ({ isAuthenticated, onLogout, onReset }) => {
   const navigate = useNavigate();
@@ -20,7 +19,12 @@ const Navbar = ({ isAuthenticated, onLogout, onReset }) => {
         onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') navigate('/'); }}
       >
         <span className="w-9 h-9 bg-gradient-to-br from-indigo-500 via-purple-600 to-fuchsia-600 rounded-xl flex items-center justify-center shadow-md">
-          <MessageCircle className="w-5 h-5 text-white" />
+          <img
+            src="/botavatar.svg"
+            alt="IntelliLearn Logo"
+            className="w-6 h-6 object-contain bg-transparent mix-blend-screen"
+            aria-hidden="true"
+          />
         </span>
         <span className="text-2xl font-bold bg-gradient-to-r from-indigo-400 via-purple-400 to-fuchsia-500 bg-clip-text text-transparent select-none">
           IntelliLearn
@@ -104,4 +108,4 @@ const Navbar = ({ isAuthenticated, onLogout, onReset }) => {
   );
 };
 
-export default Navbar; 
+export default Navbar;

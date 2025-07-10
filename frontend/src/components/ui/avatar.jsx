@@ -34,4 +34,11 @@ const AvatarFallback = React.forwardRef(({ className, ...props }, ref) => (
 ))
 AvatarFallback.displayName = "AvatarFallback"
 
-export { Avatar, AvatarImage, AvatarFallback }
+const BotAvatar = () => (
+  <Avatar>
+    <AvatarImage src="/botavatar.svg" alt="Bot Avatar" />
+  </Avatar>
+)
+BotAvatar.displayName = "BotAvatar"
+
+export { Avatar, AvatarImage, AvatarFallback, BotAvatar }
