@@ -96,12 +96,22 @@ export const UserProvider = ({ children }) => {
       }
       // This piece of code writes a new user into the Users table
       if (data.user) {
-        const {error} = await insertUser({
+        const { error: insertError } = await insertUser({
           id: data.user.id,
           email: data.user.email,
           full_name: name
         });
-        console.log(error);
+        
+        if (insertError) {
+          console.error('Failed to insert user into Users table:', insertError);
+          // Don't fail the signup process if user insertion fails
+          // as the authentication was successful
+          toast({
+            title: "User Profile Warning",
+            description: "Account created but profile data may be incomplete. Please contact support if you experience issues.",
+            variant: "destructive"
+          });
+        }
       }
 
       if (data.user && !data.session) {

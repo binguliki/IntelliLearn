@@ -2,11 +2,13 @@ import { Button } from "./ui/button";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useUser } from '../contexts/UserContext';
 import { deleteChatMemory } from '../libs/db';
+import { useToast } from '../hooks/use-toast';
 
 const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { isAuthenticated, signOut, user } = useUser();
+  const { toast } = useToast();
 
   const handleLogout = async () => {
     const { error } = await signOut();
@@ -16,10 +18,42 @@ const Navbar = () => {
   };
 
   const handleReset = async () => {
-    if (user) {
-      await deleteChatMemory(user.id);
+    if (!user) {
+      toast({
+        title: "Reset Failed",
+        description: "User not authenticated",
+        variant: "destructive"
+      });
+      return;
     }
-    navigate(location.pathname, { replace: true }); // soft reload
+
+    try {
+      const { error } = await deleteChatMemory(user.id);
+      
+      if (error) {
+        toast({
+          title: "Reset Failed",
+          description: "Failed to clear chat history. Please try again.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      toast({
+        title: "Chat Cleared",
+        description: "Your chat history has been successfully cleared.",
+      });
+
+      // Navigate to refresh the page and clear local state
+      navigate(location.pathname, { replace: true });
+    } catch (error) {
+      console.error('Unexpected error during chat reset:', error);
+      toast({
+        title: "Reset Failed",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
 

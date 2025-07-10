@@ -20,18 +20,40 @@ export async function upsertChatMemory(userId, memory) {
 }
 
 export async function deleteChatMemory(userId) {
-  const { error } = await supabase
-    .from('Chat Memory')
-    .delete()
-    .eq('user_id', userId);
-  return { error };
+  try {
+    const { error } = await supabase
+      .from('Chat Memory')
+      .delete()
+      .eq('user_id', userId);
+    
+    if (error) {
+      console.error('Database error deleting chat memory:', error);
+      return { error };
+    }
+    
+    return { error: null };
+  } catch (error) {
+    console.error('Unexpected error deleting chat memory:', error);
+    return { error };
+  }
 }
 
 export async function insertUser({ id, email, full_name }) {
-  const { error } = await supabase
-    .from('Users')
-    .insert([
-      { id, email, full_name }
-    ]);
-  return { error };
+  try {
+    const { error } = await supabase
+      .from('Users')
+      .insert([
+        { id, email, full_name }
+      ]);
+    
+    if (error) {
+      console.error('Database error inserting user:', error);
+      return { error };
+    }
+    
+    return { error: null };
+  } catch (error) {
+    console.error('Unexpected error inserting user:', error);
+    return { error };
+  }
 }
