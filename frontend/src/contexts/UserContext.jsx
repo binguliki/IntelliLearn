@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { supabase } from '../libs/supabase'
 import { useToast } from '../hooks/use-toast'
+import { insertUser } from '../libs/db';
 
 const UserContext = createContext()
 
@@ -92,6 +93,15 @@ export const UserProvider = ({ children }) => {
           variant: "destructive"
         })
         return { error }
+      }
+      // This piece of code writes a new user into the Users table
+      if (data.user) {
+        const {error} = await insertUser({
+          id: data.user.id,
+          email: data.user.email,
+          full_name: name
+        });
+        console.log(error);
       }
 
       if (data.user && !data.session) {

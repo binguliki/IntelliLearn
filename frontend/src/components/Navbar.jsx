@@ -1,6 +1,7 @@
 import { Button } from "./ui/button";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useUser } from '../contexts/UserContext';
+import { deleteChatMemory } from '../libs/db';
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -14,24 +15,11 @@ const Navbar = () => {
     }
   };
 
-    const handleReset = async () => {
-    const newSessionId = crypto.randomUUID();
-
-    localStorage.setItem('session_id', newSessionId);
-    localStorage.removeItem('chat_messages');
-    sessionStorage.removeItem('model_initialized');
-
-    try {
-      await fetch('http://localhost:8000/reset', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ session_id: newSessionId })
-      });
-    } catch (e) {
-      console.error("Reset error", e);
+  const handleReset = async () => {
+    if (user) {
+      await deleteChatMemory(user.id);
     }
-
-    navigate(location.pathname, { replace: true }); //added a soft reload instead of hard reload
+    navigate(location.pathname, { replace: true }); // soft reload
   };
 
 
