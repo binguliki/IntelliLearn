@@ -31,7 +31,7 @@ const Navbar = () => {
       console.error("Reset error", e);
     }
 
-    navigate(location.pathname, { replace: true });
+    navigate(location.pathname, { replace: true }); //added a soft reload instead of hard reload
   };
 
 
