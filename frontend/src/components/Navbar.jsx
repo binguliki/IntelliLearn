@@ -1,10 +1,29 @@
 import { Button } from "./ui/button";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { MessageCircle } from 'lucide-react';
+import { useUser } from '../contexts/UserContext';
 
-const Navbar = ({ isAuthenticated, onLogout, onReset }) => {
+const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { isAuthenticated, signOut, user } = useUser();
+
+  const handleLogout = async () => {
+    const { error } = await signOut();
+    if (!error) {
+      localStorage.removeItem('chat_messages');
+      localStorage.removeItem('session_id');
+      navigate('/');
+    }
+  };
+
+  const handleReset = () => {
+    localStorage.removeItem('chat_messages');
+    const newSessionId = crypto.randomUUID();
+    localStorage.setItem('session_id', newSessionId);
+    window.location.reload();
+  };
+
   return (
     <nav
       className="w-full bg-gradient-to-r from-gray-900/90 via-gray-800/90 to-gray-900/90 backdrop-blur-md shadow border-b border-gray-800 py-3 px-6 flex items-center justify-between z-50 fixed top-0 left-0"
@@ -62,6 +81,9 @@ const Navbar = ({ isAuthenticated, onLogout, onReset }) => {
           </>
         ) : (
           <>
+            <div className="text-sm text-gray-300 mr-2">
+              Welcome, {user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User'}!
+            </div>
             <Link
               to="/chat"
               aria-label="Go to Chat"
@@ -79,23 +101,23 @@ const Navbar = ({ isAuthenticated, onLogout, onReset }) => {
             </Link>
             <Button
               variant="outline"
-              onClick={onLogout}
-              aria-label="Logout"
-              type="button"
-              tabIndex={0}
-              className="rounded-full px-6 py-2 font-semibold border-gray-600 text-gray-200 hover:bg-gray-800 hover:text-red-400 transition-all duration-200 focus-visible:ring-2 focus-visible:ring-red-400"
-            >
-              Logout
-            </Button>
-            <Button
-              variant="outline"
-              onClick={onReset}
+              onClick={handleReset}
               aria-label="Reset Chat"
               type="button"
               tabIndex={0}
               className="rounded-full px-6 py-2 font-semibold border-gray-600 text-gray-200 hover:bg-gray-800 hover:text-indigo-400 transition-all duration-200 focus-visible:ring-2 focus-visible:ring-indigo-400"
             >
               Reset
+            </Button>
+            <Button
+              variant="outline"
+              onClick={handleLogout}
+              aria-label="Logout"
+              type="button"
+              tabIndex={0}
+              className="rounded-full px-6 py-2 font-semibold border-gray-600 text-gray-200 hover:bg-gray-800 hover:text-red-400 transition-all duration-200 focus-visible:ring-2 focus-visible:ring-red-400"
+            >
+              Logout
             </Button>
           </>
         )}

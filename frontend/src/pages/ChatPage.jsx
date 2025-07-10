@@ -31,7 +31,6 @@ const ChatPage = () => {
   const {
     isRecording,
     isTranscribing,
-    waveformBuffer,
     startRecording,
     stopRecording,
     renderWaveform,
@@ -53,7 +52,6 @@ const ChatPage = () => {
           setIsBackendReady(true);
         }
       } catch (error) {
-        console.log('Backend not ready yet, retrying...');
         setTimeout(checkBackendReady, 1000);
       }
     };
@@ -158,7 +156,6 @@ const ChatPage = () => {
       await startRecording(handleTranscriptionComplete);
     } catch (err) {
       setMicError("Microphone access denied or unavailable. Please check your browser settings.");
-      console.error("Mic error:", err);
     }
   };
 
@@ -203,7 +200,7 @@ const ChatPage = () => {
         <div className="fixed inset-0 bg-gray-900 bg-opacity-95 flex items-center justify-center z-50">
           <div className="text-center">
             <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <div style={{ width: '100%', height: '100vh', position: 'absolute', top: 0, left: 0, zIndex: 0, transform: 'scale(0.8)' }}>
+            <div style={{ width: '100vw', height: '100vh', position: 'absolute', top: 0, left: 0, zIndex: 0 }}>
             <Particles
               particleColors={['#ffffff', '#ffffff']}
               particleCount={500}
