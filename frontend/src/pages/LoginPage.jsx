@@ -5,17 +5,31 @@ import { Input } from "../components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { MessageCircle, Mail, Lock } from 'lucide-react';
 import { BackgroundBeams } from '@/components/ui/background-beams';
+import { useUser } from '../contexts/UserContext';
 
-const LoginPage = ({ isAuthenticated, setIsAuthenticated }) => {
+const LoginPage = () => {
   const [loginData, setLoginData] = useState({ email: '', password: '' });
+  const [isLoading, setIsLoading] = useState(false);
+  const { isAuthenticated, signIn } = useUser();
 
   if (isAuthenticated) {
     return <Navigate to="/chat" replace />;
   }
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    setIsAuthenticated(true);
+    setIsLoading(true);
+    
+    const { error } = await signIn({
+      email: loginData.email,
+      password: loginData.password,
+    });
+    
+    setIsLoading(false);
+    
+    if (!error) {
+      <Navigate to="/chat" replace />
+    }
   };
 
   return (
@@ -45,6 +59,7 @@ const LoginPage = ({ isAuthenticated, setIsAuthenticated }) => {
                   onChange={(e) => setLoginData({...loginData, email: e.target.value})}
                   className="pl-10 h-12 border border-gray-700 bg-gray-800 text-gray-100 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-400"
                   required
+                  disabled={isLoading}
                 />
               </div>
             </div>
@@ -58,18 +73,27 @@ const LoginPage = ({ isAuthenticated, setIsAuthenticated }) => {
                   onChange={(e) => setLoginData({...loginData, password: e.target.value})}
                   className="pl-10 h-12 border border-gray-700 bg-gray-800 text-gray-100 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-400"
                   required
+                  disabled={isLoading}
                 />
               </div>
             </div>
             <Button 
               type="submit" 
               className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+              disabled={isLoading}
             >
-              Sign In
+              {isLoading ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  Signing In...
+                </div>
+              ) : (
+                'Sign In'
+              )}
             </Button>
             <div className="text-center mt-4">
               <span className="text-gray-300">Don't have an account? </span>
-              <a href="/signup" className="text-indigo-400 hover:underline">Sign Up</a>
+              <Link to="/signup" className="text-indigo-400 hover:underline">Sign Up</Link>
             </div>
           </form>
         </CardContent>

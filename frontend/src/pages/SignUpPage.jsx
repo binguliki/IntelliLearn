@@ -5,17 +5,52 @@ import { Input } from "../components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { MessageCircle, Mail, Lock, User } from 'lucide-react';
 import { BackgroundBeams } from '@/components/ui/background-beams';
+import { useUser } from '../contexts/UserContext';
 
-const SignUpPage = ({ isAuthenticated, setIsAuthenticated }) => {
+const SignUpPage = () => {
   const [signupData, setSignupData] = useState({ name: '', email: '', password: '', confirmPassword: '' });
+  const [isLoading, setIsLoading] = useState(false);
+  const { isAuthenticated, signUp, showError } = useUser();
 
   if (isAuthenticated) {
     return <Navigate to="/chat" replace />;
   }
 
-  const handleSignup = (e) => {
+  const validateForm = () => {
+    if (signupData.password.length < 6) {
+      return { isValid: false, error: 'Password must be at least 6 characters long' };
+    }
+    if (signupData.password !== signupData.confirmPassword) {
+      return { isValid: false, error: 'Passwords do not match' };
+    }
+    if (!signupData.name.trim()) {
+      return { isValid: false, error: 'Name is required' };
+    }
+    return { isValid: true };
+  };
+
+  const handleSignup = async (e) => {
     e.preventDefault();
-    setIsAuthenticated(true);
+    
+    const validation = validateForm();
+    if (!validation.isValid) {
+      showError('Validation Error', validation.error);
+      return;
+    }
+    
+    setIsLoading(true);
+    
+    const { error } = await signUp({
+      email: signupData.email,
+      password: signupData.password,
+      name: signupData.name,
+    });
+    
+    setIsLoading(false);
+    
+    if (!error) {
+      <Navigate to="/chat" replace />
+    }
   };
 
   return (
@@ -45,6 +80,7 @@ const SignUpPage = ({ isAuthenticated, setIsAuthenticated }) => {
                   onChange={(e) => setSignupData({...signupData, name: e.target.value})}
                   className="pl-10 h-12 border border-gray-700 bg-gray-800 text-gray-100 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-400"
                   required
+                  disabled={isLoading}
                 />
               </div>
             </div>
@@ -58,6 +94,7 @@ const SignUpPage = ({ isAuthenticated, setIsAuthenticated }) => {
                   onChange={(e) => setSignupData({...signupData, email: e.target.value})}
                   className="pl-10 h-12 border border-gray-700 bg-gray-800 text-gray-100 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-400"
                   required
+                  disabled={isLoading}
                 />
               </div>
             </div>
@@ -71,8 +108,11 @@ const SignUpPage = ({ isAuthenticated, setIsAuthenticated }) => {
                   onChange={(e) => setSignupData({...signupData, password: e.target.value})}
                   className="pl-10 h-12 border border-gray-700 bg-gray-800 text-gray-100 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-400"
                   required
+                  disabled={isLoading}
+                  minLength={6}
                 />
               </div>
+              <p className="text-xs text-gray-400">Password must be at least 6 characters long</p>
             </div>
             <div className="space-y-2">
               <div className="relative">
@@ -84,14 +124,23 @@ const SignUpPage = ({ isAuthenticated, setIsAuthenticated }) => {
                   onChange={(e) => setSignupData({...signupData, confirmPassword: e.target.value})}
                   className="pl-10 h-12 border border-gray-700 bg-gray-800 text-gray-100 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-400"
                   required
+                  disabled={isLoading}
                 />
               </div>
             </div>
             <Button 
               type="submit" 
               className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+              disabled={isLoading}
             >
-              Create Account
+              {isLoading ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  Creating Account...
+                </div>
+              ) : (
+                'Create Account'
+              )}
             </Button>
             <div className="text-center mt-4">
               <span className="text-gray-300">Already have an account? </span>

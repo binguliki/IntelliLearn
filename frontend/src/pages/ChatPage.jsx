@@ -31,7 +31,6 @@ const ChatPage = () => {
   const {
     isRecording,
     isTranscribing,
-    waveformBuffer,
     startRecording,
     stopRecording,
     renderWaveform,
@@ -53,7 +52,6 @@ const ChatPage = () => {
           setIsBackendReady(true);
         }
       } catch (error) {
-        console.log('Backend not ready yet, retrying...');
         setTimeout(checkBackendReady, 1000);
       }
     };
@@ -158,7 +156,6 @@ const ChatPage = () => {
       await startRecording(handleTranscriptionComplete);
     } catch (err) {
       setMicError("Microphone access denied or unavailable. Please check your browser settings.");
-      console.error("Mic error:", err);
     }
   };
 

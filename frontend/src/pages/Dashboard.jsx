@@ -4,9 +4,11 @@ import Navbar from "../components/Navbar";
 import { Button } from "../components/ui/button";
 import { ChevronDown } from 'lucide-react';
 import Orb from "@/components/ui/orb";
+import { useUser } from "../contexts/UserContext";
 
-const Dashboard = ({ isAuthenticated }) => {
+const Dashboard = () => {
   const [show, setShow] = useState(false);
+  const { isAuthenticated } = useUser();
 
   useEffect(() => {
     setTimeout(() => setShow(true), 300);
@@ -15,7 +17,7 @@ const Dashboard = ({ isAuthenticated }) => {
   return (
     <>
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 animate-gradient-x">
-      <Navbar isAuthenticated={isAuthenticated} />
+      <Navbar />
       {/* Hero Section */}
       <section className={`flex flex-col items-center justify-center text-center px-4 pt-24 min-h-screen transition-opacity duration-1000 ${show ? 'opacity-100' : 'opacity-0'}`}> 
         <div className="flex items-center justify-center">
@@ -32,10 +34,8 @@ const Dashboard = ({ isAuthenticated }) => {
         <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
           {!isAuthenticated ? (
             <>
-              <Link to="/signin" tabIndex={0} aria-label="Sign In">
-                <Button size="lg" className="bg-gradient-to-r from-indigo-600 via-purple-600 to-fuchsia-600 text-white shadow-lg rounded-full px-8 py-3 font-semibold hover:scale-105 hover:shadow-xl transition-all duration-200 focus-visible:ring-2 focus-visible:ring-indigo-400">
-                  Sign In
-                </Button>
+              <Link to="/signin" className="bg-gradient-to-r from-indigo-600 via-purple-600 to-fuchsia-600 text-white shadow-lg rounded-full px-8 py-3 font-semibold hover:scale-105 hover:shadow-xl transition-all duration-200 focus-visible:ring-2 focus-visible:ring-indigo-400">
+                Sign In
               </Link>
               <Link to="/signup" tabIndex={0} aria-label="Sign Up">
                 <Button size="lg" variant="outline" className="rounded-full px-8 py-3 font-semibold border-2 border-gray-500 text-gray-100 hover:bg-gray-800 transition-all duration-200 focus-visible:ring-2 focus-visible:ring-purple-400">
@@ -95,9 +95,16 @@ const Dashboard = ({ isAuthenticated }) => {
             <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full mx-auto mb-4 flex items-center justify-center">
               <span className="text-white font-bold text-xl">LB</span>
             </div>
-            <h4 className="text-xl font-semibold text-gray-100 mb-2">Likhith B.</h4>
+            <h4 className="text-xl font-semibold text-gray-100 mb-2">Likith B.</h4>
             <p className="text-gray-400 text-sm">AI/ML Developer</p>
-            <Link to = "https://www.linkedin.com/in/bingumalla-likith/"><p className="text-blue-500 underline">Linkedin</p></Link>
+            <a 
+              href="https://www.linkedin.com/in/bingumalla-likith/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-500 hover:text-blue-400 underline inline-block mt-2"
+            >
+              LinkedIn
+            </a>
           </div>
           
           <div className="bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 text-center border border-gray-700/50 hover:scale-105 hover:bg-gray-700/80">
@@ -106,7 +113,14 @@ const Dashboard = ({ isAuthenticated }) => {
             </div>
             <h4 className="text-xl font-semibold text-gray-100 mb-2">Vydhika T.</h4>
             <p className="text-gray-400 text-sm">Designer and <br></br>Front-end Developer</p>
-            <Link to = "https://www.linkedin.com/in/vydhika-talatam/"><p className="text-blue-500 underline">Linkedin</p></Link>
+            <a 
+              href="https://www.linkedin.com/in/vydhika-talatam/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-500 hover:text-blue-400 underline inline-block mt-2"
+            >
+              LinkedIn
+            </a>
           </div>
           
           <div className="bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 text-center border border-gray-700/50 hover:scale-105 hover:bg-gray-700/80">
@@ -115,7 +129,14 @@ const Dashboard = ({ isAuthenticated }) => {
             </div>
             <h4 className="text-xl font-semibold text-gray-100 mb-2">Ibrahim C.</h4>
             <p className="text-gray-400 text-sm">Full stack Developer</p>
-            <Link to = "https://www.linkedin.com/in/ibrahimchikani"><p className="text-blue-500 underline">Linkedin</p></Link>
+            <a 
+              href="https://www.linkedin.com/in/ibrahimchikani"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-500 hover:text-blue-400 underline inline-block mt-2"
+            >
+              LinkedIn
+            </a>
           </div>
         </div>
       </section>
