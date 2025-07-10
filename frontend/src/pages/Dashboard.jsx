@@ -44,11 +44,9 @@ const Dashboard = () => {
               </Link>
             </>
           ) : (
-            <Link to="/chat" tabIndex={0} aria-label="Go to Chat">
-              <Button size="lg" variant="default" className="rounded-full px-8 py-3 font-semibold bg-gradient-to-r from-indigo-600 via-purple-600 to-fuchsia-600 text-white shadow-lg hover:scale-105 hover:shadow-xl transition-all duration-200 focus-visible:ring-2 focus-visible:ring-indigo-400">
+              <Link to="/chat" tabIndex={0} aria-label="Go to Chat" className="rounded-full px-8 py-3 font-semibold bg-gradient-to-r from-indigo-600 via-purple-600 to-fuchsia-600 text-white shadow-lg hover:scale-105 hover:shadow-xl transition-all duration-200 focus-visible:ring-2 focus-visible:ring-indigo-400 text-center text-lg">
                 Go to Chat
-              </Button>
-            </Link>
+              </Link>
           )}
         </div>
         {/* Down Arrow Scroll Cue */}
