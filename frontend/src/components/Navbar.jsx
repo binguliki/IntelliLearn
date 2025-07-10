@@ -1,6 +1,5 @@
 import { Button } from "./ui/button";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { MessageCircle } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
 
 const Navbar = () => {
@@ -11,16 +10,22 @@ const Navbar = () => {
   const handleLogout = async () => {
     const { error } = await signOut();
     if (!error) {
-      localStorage.removeItem('chat_messages');
-      localStorage.removeItem('session_id');
       navigate('/');
     }
   };
 
-  const handleReset = () => {
+  const handleReset = async () => {
     localStorage.removeItem('chat_messages');
+    sessionStorage.removeItem('model_initialized');
     const newSessionId = crypto.randomUUID();
     localStorage.setItem('session_id', newSessionId);
+    try {
+      await fetch('http://localhost:8000/reset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ session_id: newSessionId })
+      });
+    } catch (e) {}
     window.location.reload();
   };
 
@@ -86,9 +91,6 @@ const Navbar = () => {
           </>
         ) : (
           <>
-            <div className="text-sm text-gray-300 mr-2">
-              Welcome, {user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User'}!
-            </div>
             <Link
               to="/chat"
               aria-label="Go to Chat"
@@ -124,6 +126,9 @@ const Navbar = () => {
             >
               Logout
             </Button>
+            <div className="w-12 h-12 bg-gradient-to-br hover:cursor-pointer from-indigo-500 to-purple-600 rounded-full mx-auto flex items-center justify-center">
+              <span className="text-white font-bold text-md">{(user?.user_metadata?.full_name?.split(' ').map(n => n[0]).join('') ?? '') || user?.email?.split('@')[0] || 'User'}</span>
+            </div>
           </>
         )}
       </div>

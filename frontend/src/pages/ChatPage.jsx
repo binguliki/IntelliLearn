@@ -21,6 +21,9 @@ const ChatPage = () => {
   const [previewUrl, setPreviewUrl] = useState(null);
   const [imageBase64, setImageBase64] = useState(null);
   const [micError, setMicError] = useState("");
+  const [isModelInitialized, setIsModelInitialized] = useState(() => {
+    return sessionStorage.getItem('model_initialized') === 'true';
+  });
 
   let sessionId = localStorage.getItem('session_id');
   if (!sessionId) {
@@ -62,6 +65,22 @@ const ChatPage = () => {
     localStorage.setItem('chat_messages', JSON.stringify(messages));
   }, [messages]);
 
+  // // Add a useEffect to clear isModelInitialized and messages if session_id changes (reset)
+  // useEffect(() => {
+  //   const handleStorageChange = () => {
+  //     setIsModelInitialized(sessionStorage.getItem('model_initialized') === 'true');
+  //     const savedMessages = localStorage.getItem('chat_messages');
+  //     setMessages(savedMessages ? JSON.parse(savedMessages) : []);
+  //   };
+  //   window.addEventListener('storage', handleStorageChange);
+  //   return () => window.removeEventListener('storage', handleStorageChange);
+  // }, []);
+
+  useEffect(() => {
+    setIsModelInitialized(false);
+    setMessages([]);
+  }, [sessionId]);
+
   const handleSendMessage = ({ text, file, previewUrl, imageBase64, reset }) => {
     if (!text.trim() && !file) return;
     let userMessage = {
@@ -76,12 +95,20 @@ const ChatPage = () => {
     setIsTyping(true);
 
     const imageMimeType = file ? file.type : null;
-    const payload = {
+    let payload = {
       message: text,
       session_id: sessionId,
       image_base64: imageBase64,
       image_mime_type: imageMimeType
     };
+
+    // Only send chat history if model is not initialized
+    if (!isModelInitialized) {
+      payload.chat_history = messages;
+      sessionStorage.setItem('model_initialized', 'true');
+      setIsModelInitialized(true);
+    }
+
     fetch('http://localhost:8000/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
