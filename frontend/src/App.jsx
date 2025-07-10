@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Toaster } from "./components/ui/toaster";
 import { TooltipProvider } from "./components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -10,83 +9,60 @@ import SignUpPage from "./pages/SignUpPage";
 import Dashboard from "./pages/Dashboard";
 import Navbar from "./components/Navbar";
 import { ToastProvider } from "./hooks/use-toast.jsx";
+import { UserProvider } from "./contexts/UserContext";
 
 const queryClient = new QueryClient();
 
 const App = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [chatResetKey, setChatResetKey] = useState(0);
-
-  const handleLogout = () => {
-    setIsAuthenticated(false);
-    localStorage.removeItem('chat_messages');
-    localStorage.removeItem('session_id');
-  };
-
-  const handleReset = () => {
-    setChatResetKey(prev => prev + 1);
-    localStorage.removeItem('chat_messages');
-    const newSessionId = crypto.randomUUID();
-    localStorage.setItem('session_id', newSessionId);
-  };
-
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <ToastProvider>
-          <Toaster />
-          <BrowserRouter>
-            <Routes>
-              <Route 
-                path="/" 
-                element={
-                  <>
-                    <Navbar isAuthenticated={isAuthenticated} onLogout={handleLogout} />
-                  <Dashboard 
-                    isAuthenticated={isAuthenticated} 
-                    setIsAuthenticated={setIsAuthenticated} 
-                    onLogout={handleLogout}
-                  />
-                  </>
-                } 
-              />
-              <Route 
-                path="/signin" 
-                element={
-                  <>
-                    <Navbar isAuthenticated={isAuthenticated} onLogout={handleLogout} />
-                  <LoginPage 
-                    isAuthenticated={isAuthenticated} 
-                    setIsAuthenticated={setIsAuthenticated} 
-                  />
-                  </>
-                } 
-              />
-              <Route 
-                path="/chat" 
-                element={
-                  <ProtectedRoute isAuthenticated={isAuthenticated}>
+          <UserProvider>
+            <Toaster />
+            <BrowserRouter>
+              <Routes>
+                <Route 
+                  path="/" 
+                  element={
                     <>
-                      <Navbar isAuthenticated={isAuthenticated} onLogout={handleLogout} onReset={handleReset} />
-                      <ChatPage key={chatResetKey} />
+                      <Navbar />
+                      <Dashboard />
                     </>
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/signup" 
-                element={
-                  <>
-                    <Navbar isAuthenticated={isAuthenticated} onLogout={handleLogout} />
-                  <SignUpPage 
-                    isAuthenticated={isAuthenticated} 
-                    setIsAuthenticated={setIsAuthenticated} 
-                  />
-                  </>
-                } 
-              />
-            </Routes>
-          </BrowserRouter>
+                  } 
+                />
+                <Route 
+                  path="/signin" 
+                  element={
+                    <>
+                      <Navbar />
+                      <LoginPage />
+                    </>
+                  } 
+                />
+                <Route 
+                  path="/chat" 
+                  element={
+                    <ProtectedRoute>
+                      <>
+                        <Navbar />
+                        <ChatPage />
+                      </>
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/signup" 
+                  element={
+                    <>
+                      <Navbar />
+                      <SignUpPage />
+                    </>
+                  } 
+                />
+              </Routes>
+            </BrowserRouter>
+          </UserProvider>
         </ToastProvider>
       </TooltipProvider>
     </QueryClientProvider>
