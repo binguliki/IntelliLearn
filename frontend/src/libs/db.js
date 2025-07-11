@@ -13,9 +13,8 @@ export async function fetchChatMemory(userId) {
 export async function upsertChatMemory(userId, memory) {
   const { error } = await supabase
     .from('Chat Memory')
-    .upsert([
-      { user_id: userId, memory }
-    ]);
+    .update({ memory })
+    .eq('user_id', userId);
   return { error };
 }
 
