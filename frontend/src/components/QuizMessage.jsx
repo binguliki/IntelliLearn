@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Avatar, AvatarFallback } from "../components/ui/avatar";
-import { Bot, User, CheckCircle, XCircle } from 'lucide-react';
+import { Avatar, AvatarImage } from "../components/ui/avatar";
+import { User, CheckCircle, XCircle } from 'lucide-react';
 
 const QuizMessage = ({ message, onQuizComplete }) => {
   const isBot = message.sender === 'bot';
@@ -79,9 +79,14 @@ const QuizMessage = ({ message, onQuizComplete }) => {
     return (
       <div className={`flex items-start space-x-3 ${isBot ? '' : 'flex-row-reverse space-x-reverse'} animate-fade-in`}>
         <Avatar className={`w-8 h-8 shadow-sm ${isBot ? 'bg-gray-700' : 'bg-indigo-700'}`}>
-          <AvatarFallback className="text-gray-500">
-            {isBot ? <Bot className="w-4 h-4" /> : <User className="w-4 h-4" />}
-          </AvatarFallback>
+          {isBot ? 
+            <AvatarImage 
+              src="/botavatar.svg" 
+              alt="Bot Avatar" 
+              className="aspect-square h-full w-full object-contain bg-transparent"
+            /> : 
+            <User className="w-4 h-4" />
+          }
         </Avatar>
         <div className={`max-w-xs lg:max-w-md ${isBot ? '' : 'text-left'}`}>
           <div className="px-6 py-4 rounded-2xl shadow-lg text-base font-sans bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 border border-indigo-700 text-gray-100 flex flex-col items-center gap-2">
@@ -99,9 +104,14 @@ const QuizMessage = ({ message, onQuizComplete }) => {
   return (
     <div className={`flex items-start space-x-3 ${isBot ? '' : 'flex-row-reverse space-x-reverse'} animate-fade-in`}>
       <Avatar className={`w-8 h-8 shadow-sm ${isBot ? 'bg-gray-700' : 'bg-indigo-700'}`}>
-        <AvatarFallback className="text-gray-500">
-          {isBot ? <Bot className="w-4 h-4" /> : <User className="w-4 h-4" />}
-        </AvatarFallback>
+          {isBot ? 
+            <AvatarImage 
+              src="/botavatar.svg" 
+              alt="Bot Avatar" 
+              className="aspect-square h-full w-full object-contain bg-transparent"
+            /> : 
+            <User className="w-4 h-4" />
+          }
       </Avatar>
       <div className={`max-w-xs lg:max-w-md ${isBot ? '' : 'text-left'}`}>
         <div className="inline-block px-4 py-4 rounded-xl shadow-sm text-sm font-sans bg-gray-900 border border-gray-700 text-gray-100">

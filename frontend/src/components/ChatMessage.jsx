@@ -26,8 +26,6 @@ const ChatMessage = ({ message, onQuizComplete }) => {
               alt="Bot Avatar"
               className="w-full h-full object-contain bg-transparent mix-blend-screen"
             />
-            <AvatarFallback className="text-gray-200">
-            </AvatarFallback>
           </>
         ) : (
           <AvatarFallback className="text-gray-200">
