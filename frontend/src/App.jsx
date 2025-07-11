@@ -10,6 +10,7 @@ import Dashboard from "./pages/Dashboard";
 import Navbar from "./components/Navbar";
 import { ToastProvider } from "./hooks/use-toast.jsx";
 import { UserProvider } from "./contexts/UserContext";
+import NotesDashboard from "./pages/NotesDashboard";
 
 const queryClient = new QueryClient();
 
@@ -58,6 +59,14 @@ const App = () => {
                       <Navbar />
                       <SignUpPage />
                     </>
+                  } 
+                />
+                <Route 
+                  path="/notes" 
+                  element={
+                    <ProtectedRoute>
+                      <NotesDashboard />
+                    </ProtectedRoute>
                   } 
                 />
               </Routes>

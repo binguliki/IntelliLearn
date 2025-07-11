@@ -2,12 +2,32 @@ import { Button } from "./ui/button";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useUser } from '../contexts/UserContext';
 import { useToast } from '../hooks/use-toast';
+import { useState, useRef, useEffect } from "react";
 
 const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { isAuthenticated, signOut, user, resetChat } = useUser();
   const { toast } = useToast();
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setDropdownOpen(false);
+      }
+    }
+    if (dropdownOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    } else {
+      document.removeEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [dropdownOpen]);
 
   const handleLogout = async () => {
     const { error } = await signOut();
@@ -37,7 +57,7 @@ const Navbar = () => {
         return;
       }
 
-      // Emit a custom event to notify ChatPage to clear its local messages state
+
       window.dispatchEvent(new Event('chat-reset'));
 
       toast({
@@ -142,18 +162,38 @@ const Navbar = () => {
             >
               Reset
             </Button>
-            <Button
-              variant="outline"
-              onClick={handleLogout}
-              aria-label="Logout"
-              type="button"
-              tabIndex={0}
-              className="rounded-full px-6 py-2 font-semibold border-gray-600 text-gray-200 hover:bg-gray-800 hover:text-red-400 transition-all duration-200 focus-visible:ring-2 focus-visible:ring-red-400"
-            >
-              Logout
-            </Button>
-            <div className="w-12 h-12 bg-gradient-to-br hover:cursor-pointer from-indigo-500 to-purple-600 rounded-full mx-auto flex items-center justify-center">
-              <span className="text-white font-bold text-md">{(user?.user_metadata?.full_name?.split(' ').map(n => n[0]).join('') ?? '') || user?.email?.split('@')[0] || 'User'}</span>
+            <div className="relative" ref={dropdownRef}>
+              <div
+                className="w-12 h-12 bg-gradient-to-br hover:cursor-pointer from-indigo-500 to-purple-600 rounded-full mx-auto flex items-center justify-center"
+                onClick={() => setDropdownOpen((open) => !open)}
+                tabIndex={0}
+                aria-label="User menu"
+                onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') setDropdownOpen((open) => !open); }}
+              >
+                <span className="text-white font-bold text-md">{(user?.user_metadata?.full_name?.split(' ').map(n => n[0]).join('') ?? '') || user?.email?.split('@')[0] || 'User'}</span>
+              </div>
+              {dropdownOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-gray-900 border border-gray-700 rounded-lg shadow-lg z-50 animate-fade-in">
+                  <button
+                    className="block w-full text-left px-4 py-2 text-gray-200 hover:bg-gray-800 focus:outline-none"
+                    onClick={() => {
+                      setDropdownOpen(false);
+                      navigate('/notes');
+                    }}
+                  >
+                    My Notes
+                  </button>
+                  <button
+                    className="block w-full text-left px-4 py-2 text-gray-200 hover:bg-gray-800 focus:outline-none"
+                    onClick={async () => {
+                      setDropdownOpen(false);
+                      await handleLogout();
+                    }}
+                  >
+                    Logout
+                  </button>
+                </div>
+              )}
             </div>
           </>
         )}

@@ -7,6 +7,7 @@ from typing import Optional, Dict
 from google import genai
 from google.genai.types import GenerateContentConfig, Content, Part
 from dotenv import load_dotenv
+from .supabaseClient import supabase
 
 load_dotenv()
 
@@ -146,3 +147,46 @@ def generate_quiz(content: str) -> Dict:
             return {"error": "Invalid quiz JSON structure"}
     except Exception as e:
         return {"error": f"Error processing quiz: {str(e)}"}
+
+# here the user_id is kept optional so model doesn't keep looking for it.
+@tool
+def save_notes(data: str, user_id: str) -> str:
+    '''
+        Args:
+            content: JSON string containing notes in the format.
+            {  
+                "title": "title of the document",
+                "content" : "Complete notes in markdown format"
+            }
+            user_id: User id
+        Returns: 
+            str: Success message or Error message
+    '''
+    try:
+        note_data = json.loads(data)
+        title = note_data.get("title")
+        content = note_data.get("content")
+        
+        # Validating the input
+        if not title or not content:
+            return "Error: 'title' and 'content' fields are required in the data."
+
+        user_check = supabase.table("Notes").select("notes").eq("user_id", user_id).execute()
+
+        if not user_check.data:
+            supabase.table("Notes").insert({
+                "user_id": user_id,
+                "notes": [note_data]
+            }).execute()
+        else:
+            existing_notes = user_check.data[0].get("notes", [])
+            updated_notes = existing_notes + [note_data]
+
+            supabase.table("Notes").update({
+                "notes": updated_notes
+            }).eq("user_id", user_id).execute()
+
+        return "Note successfully saved to the database."
+
+    except Exception as e:
+        return f"Unexpected error: {str(e)}"

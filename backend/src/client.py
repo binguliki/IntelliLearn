@@ -5,7 +5,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from langchain.memory import ConversationBufferMemory
 from langchain_google_genai import ChatGoogleGenerativeAI
 
-from .tools import generate_image, generate_quiz
+from .tools import generate_image, generate_quiz, save_notes
 
 load_dotenv()
 
@@ -19,6 +19,9 @@ You are IntelliLearn — an intelligent, friendly educational assistant that hel
 - Break down complex topics into simple, digestible steps
 - Use **visual aids and diagrams** whenever possible to enhance understanding
 - Create comprehensive interactive learning experiences through multi-question quizzes
+- Help students retain knowledge by generating concise and well-structured notes on request
+
+---
 
 ## Enhanced Quiz System
 
@@ -33,26 +36,64 @@ You are IntelliLearn — an intelligent, friendly educational assistant that hel
 Use the quiz format shown below, convert it to a valid JSON string, and call the `generate_quiz` tool with it as the argument.
 
 ### Quiz Creation Guidelines:
-- Always create 5-10 questions per quiz
+- Always create 5–10 questions per quiz
 - Mix question types: recall, comprehension, application, analysis
-- Provide 3-4 options per question
+- Provide 3–4 options per question
 - Include detailed explanations for each correct answer
-- Use "correctOption" as a string: "1" for single answer, "1,3" for multiple answers
-- Set "multipleCorrectAnswers": true when multiple options are correct
+- Use `"correctOption"` as a string: `"1"` for single answer, `"1,3"` for multiple answers
+- Set `"multipleCorrectAnswers": true` when multiple options are correct
 
 ### Quiz Invitation:
 - Proactively offer quizzes with engaging language:
-- "Ready to test your understanding of [topic] with a comprehensive quiz?"
-- "How about we check your mastery of these concepts with some practice questions?"
-- "Would you like to take a quiz covering everything we've discussed about [topic]?"
+  - "Ready to test your understanding of [topic] with a comprehensive quiz?"
+  - "How about we check your mastery of these concepts with some practice questions?"
+  - "Would you like to take a quiz covering everything we've discussed about [topic]?"
+
+---
+
+## Notes Generation System
+
+### When to Offer or Generate Notes:
+- When a user explicitly requests **quick notes**, **short notes**, or **summary notes**
+- After a topic is explained and the user appears confident in understanding
+- After completing a quiz, as a way to retain and reflect on learned concepts
+
+### Guidelines for Notes Creation:
+- Format notes in **structured markdown**
+- Use **headings**, **bullet points**, and **code blocks or formulas** if needed
+- Keep the language concise but informative
+- Clearly organize subtopics, key points, definitions, and examples
+- Ensure the notes are suitable for **revision** and **personal reference**
+
+### Notes Output Example:
+```markdown
+# Topic Title
+
+## Key Concepts
+- Point 1: Brief explanation
+- Point 2: Summary detail
+- ...
+
+## Important Terms
+- **Term 1**: Definition
+- **Term 2**: Definition
+
+## Example
+- Situation or use case with explanation
+```
+
+### Storage Instruction (IMPORTANT):
+- You must ALWAYS save the generated notes using the appropriate tool.
+- After generating the notes content, immediately invoke the tool to save it.
+- Never skip this step.
 
 ## Response Guidelines:
 - Maintain encouraging, supportive communication
 - Provide constructive feedback for improvement
-- Use quizzes to guide future teaching
+- Use quizzes and notes to guide future teaching
 - Celebrate learning progress and effort
-- Encourage questions and curiosity beyond the quiz content''' 
-
+- Encourage questions and curiosity beyond the current topic
+'''
 class Agent:
     def __init__(self):
         model = ChatGoogleGenerativeAI(
@@ -60,7 +101,7 @@ class Agent:
             temperature=0.7,
         )
         
-        self.llm = model.bind_tools([generate_image, generate_quiz])
+        self.llm = model.bind_tools([generate_image, generate_quiz, save_notes])
         
         self.memory = ConversationBufferMemory(
             memory_key="chat_history",
@@ -91,7 +132,7 @@ class Agent:
         summary += "Please provide feedback on the student's performance and suggest areas for improvement."
         return summary
 
-    async def process_query(self, user_input: Union[str, dict]) -> dict:
+    async def process_query(self, user_input: Union[str, dict], user_id) -> dict:
         """Process user query and return response"""
         text = ""
         image_b64 = None
@@ -162,6 +203,13 @@ class Agent:
                         except Exception as e:
                             print(f"Error processing quiz: {e}")
 
+                    elif tool_name == "save_notes":
+                        try:
+                            status = save_notes.invoke({"data": tool_params["data"], "user_id": user_id})
+                            self.memory.chat_memory.add_user_message(status)
+                        except Exception as e:
+                            print(f"Error processing quiz: {e}")
+
             self.memory.chat_memory.add_user_message(text)
             self.memory.chat_memory.add_ai_message(explanation)
 
@@ -172,6 +220,7 @@ class Agent:
             }
 
         except Exception as e:
+            print(str(e))
             return {
                 "text": f"Error: {str(e)}", 
                 "image": "", 

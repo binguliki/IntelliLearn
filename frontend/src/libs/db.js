@@ -73,3 +73,22 @@ export async function insertUser({ id, email, full_name }) {
     return { error };
   }
 }
+
+// Fetch all notes for a user
+export async function fetchUserNotes(userId) {
+  try {
+    const { data, error } = await supabase
+      .from('Notes')
+      .select('notes')
+      .eq('user_id', userId)
+      .single();
+    if (error && error.code !== 'PGRST116') {
+      console.error('Database error fetching notes:', error);
+      return { notes: [], error };
+    }
+    return { notes: data?.notes || [], error: null };
+  } catch (error) {
+    console.error('Unexpected error fetching notes:', error);
+    return { notes: [], error };
+  }
+}
