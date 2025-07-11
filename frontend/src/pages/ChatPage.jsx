@@ -7,13 +7,14 @@ import ChatMessage from "../components/ChatMessage";
 import TypingIndicator from "../components/TypingIndicator";
 import Particles from '../components/ui/particles';
 import { useUser } from '../contexts/UserContext';
-import { fetchChatMemory, upsertChatMemory } from '../libs/db';
 
 const ChatPage = () => {
-  const { user, messages, setMessages } = useUser();
+  const { user, chatHistory, saveMessagesToDatabase } = useUser();
+  const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [isBackendReady, setIsBackendReady] = useState(false);
+  const [isModelInitialized, setIsModelInitialized] = useState(false);
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
   const [selectedFile, setSelectedFile] = useState(null);
@@ -28,19 +29,18 @@ const ChatPage = () => {
     stopRecording,
     renderWaveform,
   } = useAudioRecording();
-  
-  useEffect(() => {
-    if (!user) return;
-    (async () => {
-      const { memory } = await fetchChatMemory(user.id);
-      setMessages(memory);
-    })();
-  }, [user]);
 
   useEffect(() => {
-    if (!user) return;
-    upsertChatMemory(user.id, messages);
-  }, [user.id, messages]);
+    if (user && messages.length > 0) {
+      saveMessagesToDatabase(messages);
+    }
+  }, [messages, user, saveMessagesToDatabase]);
+
+  useEffect(() => {
+    const handleChatReset = () => setMessages([]);
+    window.addEventListener('chat-reset', handleChatReset);
+    return () => window.removeEventListener('chat-reset', handleChatReset);
+  }, []);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -83,6 +83,12 @@ const ChatPage = () => {
       image_base64: imageBase64,
       image_mime_type: imageMimeType
     };
+
+    // Only send chat history if model is not initialized
+    if (!isModelInitialized) {
+      payload.chat_history = chatHistory;
+      setIsModelInitialized(true);
+    }
 
     fetch('http://localhost:8000/chat', {
       method: 'POST',
@@ -220,11 +226,18 @@ const ChatPage = () => {
       )}
       <div className="w-full flex flex-col items-center relative z-10">
         <div className="flex-1 w-full max-w-3xl overflow-y-auto p-4 space-y-4 pb-24 scrollbar-none mx-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          {chatHistory && chatHistory.map((message) => (
+            message.quiz ? (
+              <ChatMessage key={`history-${message.id}`} message={message} onQuizComplete={(report) => handleQuizComplete(report, message.id)} />
+            ) : (
+              <ChatMessage key={`history-${message.id}`} message={message} onQuizComplete={handleQuizComplete} />
+            )
+          ))}
           {messages.map((message) => (
             message.quiz ? (
-              <ChatMessage key={message.id} message={message} onQuizComplete={(report) => handleQuizComplete(report, message.id)} />
+              <ChatMessage key={`msg-${message.id}`} message={message} onQuizComplete={(report) => handleQuizComplete(report, message.id)} />
             ) : (
-              <ChatMessage key={message.id} message={message} onQuizComplete={handleQuizComplete} />
+              <ChatMessage key={`msg-${message.id}`} message={message} onQuizComplete={handleQuizComplete} />
             )
           ))}
           {isTyping && <TypingIndicator />}

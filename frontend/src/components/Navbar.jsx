@@ -1,13 +1,12 @@
 import { Button } from "./ui/button";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useUser } from '../contexts/UserContext';
-import { upsertChatMemory } from '../libs/db';
 import { useToast } from '../hooks/use-toast';
 
 const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAuthenticated, signOut, user } = useUser();
+  const { isAuthenticated, signOut, user, resetChat } = useUser();
   const { toast } = useToast();
 
   const handleLogout = async () => {
@@ -28,9 +27,7 @@ const Navbar = () => {
     }
 
     try {
-      // Earlier it was deleting the user too, which is not what we want.
-      const { error } = await upsertChatMemory(user.id, []);
-      
+      const { error } = await resetChat();
       if (error) {
         toast({
           title: "Reset Failed",
@@ -40,13 +37,13 @@ const Navbar = () => {
         return;
       }
 
+      // Emit a custom event to notify ChatPage to clear its local messages state
+      window.dispatchEvent(new Event('chat-reset'));
+
       toast({
         title: "Chat Cleared",
         description: "Your chat history has been successfully cleared.",
       });
-
-      // Navigate to refresh the page and clear local state
-      navigate(location.pathname, { replace: true });
     } catch (error) {
       console.error('Unexpected error during chat reset:', error);
       toast({

@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { supabase } from '../libs/supabase'
 import { useToast } from '../hooks/use-toast'
-import { insertUser } from '../libs/db';
+import { fetchChatMemory, upsertChatMemory, insertUser } from '../libs/db';
 
 const UserContext = createContext()
 
@@ -15,9 +15,29 @@ export const useUser = () => {
 
 export const UserProvider = ({ children }) => {
   const [user, setUser] = useState(null)
-  const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true)
+  const [chatHistory, setChatHistory] = useState([])
   const { toast } = useToast()
+
+  const loadChatHistory = async (userId) => {
+    const { memory } = await fetchChatMemory(userId);
+    setChatHistory(memory);
+  };
+
+  useEffect(() => {
+    if (!user) {
+      setChatHistory([]);
+      return;
+    }
+    
+    loadChatHistory(user.id);
+  }, [user]);
+
+  const forceRefreshChatHistory = async () => {
+    if (user) {
+      await loadChatHistory(user.id);
+    }
+  };
 
   useEffect(() => {
     const getInitialSession = async () => {
@@ -242,12 +262,22 @@ export const UserProvider = ({ children }) => {
     }
   }
 
+  const resetChat = async () => {
+    if (!user) return { error: 'User not authenticated' };
+    const { error } = await upsertChatMemory(user.id, []);
+    if (!error) setChatHistory([]);
+    return { error };
+  };
+
   const value = {
     user,
     loading,
     isAuthenticated: !!user,
-    messages,
-    setMessages,
+    chatHistory,
+    setChatHistory,
+    forceRefreshChatHistory,
+    saveMessagesToDatabase: (messages) => upsertChatMemory(user?.id, messages),
+    resetChat,
     signUp,
     signIn,
     signOut,
