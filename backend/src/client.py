@@ -5,7 +5,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from langchain.memory import ConversationBufferMemory
 from langchain_google_genai import ChatGoogleGenerativeAI
 
-from .tools import generate_image, generate_quiz, write_to_database
+from .tools import generate_image, generate_quiz, save_notes
 
 load_dotenv()
 
@@ -83,8 +83,8 @@ Use the quiz format shown below, convert it to a valid JSON string, and call the
 ```
 
 ### Storage Instruction (IMPORTANT):
-- You must ALWAYS save the generated notes to the database using the appropriate tool.
-- After generating the notes content, immediately invoke the tool to persist it in the database.
+- You must ALWAYS save the generated notes using the appropriate tool.
+- After generating the notes content, immediately invoke the tool to save it.
 - Never skip this step.
 
 ## Response Guidelines:
@@ -101,7 +101,7 @@ class Agent:
             temperature=0.7,
         )
         
-        self.llm = model.bind_tools([generate_image, generate_quiz, write_to_database])
+        self.llm = model.bind_tools([generate_image, generate_quiz, save_notes])
         
         self.memory = ConversationBufferMemory(
             memory_key="chat_history",
@@ -202,9 +202,9 @@ class Agent:
                         except Exception as e:
                             print(f"Error processing quiz: {e}")
 
-                    elif tool_name == "write_to_database":
+                    elif tool_name == "save_notes":
                         try:
-                            status = write_to_database.invoke({"data": tool_params["data"], "user_id": user_id})
+                            status = save_notes.invoke({"data": tool_params["data"], "user_id": user_id})
                             self.memory.chat_memory.add_user_message(status)
                         except Exception as e:
                             print(f"Error processing quiz: {e}")

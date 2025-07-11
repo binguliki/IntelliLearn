@@ -54,7 +54,8 @@ async def chat_endpoint(request: Request):
         agent.memory = agent.memory.__class__(memory_key="chat_history", return_messages=True)
         agent.memory.chat_memory.messages.clear()
         agent.memory.chat_memory.add_message(SystemMessage(content=agent.SYSTEM_PROMPT if hasattr(agent, 'SYSTEM_PROMPT') else ""))
-        agent.memory.chat_memory.add_message(SystemMessage(content=f"user_id:{user_id}"))
+        agent.memory.chat_memory.add_message(SystemMessage(content=f"(IMPORTANT) USER_ID:{user_id} use this id when ever needed"))
+
         for msg in chat_history:
             if msg.get('sender') == 'user':
                 agent.memory.chat_memory.add_message(HumanMessage(content=msg.get('text', '')))
