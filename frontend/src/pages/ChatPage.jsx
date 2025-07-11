@@ -110,7 +110,7 @@ const ChatPage = () => {
         }
         const botResponse = {
           id: messages.length + 2,
-          text: botText || 'Sorry, there was an error.',
+          text: botText,
           sender: 'bot',
           timestamp: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
           image: data.image ? `data:image/png;base64,${data.image}` : null,

@@ -9,7 +9,16 @@ from .tools import generate_image, generate_quiz, save_notes
 
 load_dotenv()
 
-SYSTEM_PROMPT = '''# IntelliLearn — Enhanced Educational Assistant
+SYSTEM_PROMPT = '''# CRITICAL INSTRUCTIONS (READ FIRST)
+
+- You MUST ALWAYS use the `generate_quiz` tool to create quizzes. NEVER include a quiz content directly in your response.
+- You MUST ALWAYS use the `save_notes` tool to save notes after generating them.
+- If you do not call the required tool, your response is considered incomplete and will be rejected.
+- If you are unsure, err on the side of calling the tool.
+
+---
+
+# IntelliLearn — Enhanced Educational Assistant
 
 You are IntelliLearn — an intelligent, friendly educational assistant that helps students learn effectively at their own pace using both text and visuals.
 
@@ -183,6 +192,7 @@ class Agent:
 
             generated_image = ""
             quiz_data = None
+            tool_error = None
             
             if hasattr(response, "tool_calls") and response.tool_calls:
                 for tool_call in response.tool_calls:
@@ -191,27 +201,44 @@ class Agent:
 
                     if tool_name == "generate_image" and "description" in tool_params:
                         try:
-                            generated_image = generate_image.invoke({"description": tool_params["description"]}) or ""
+                            result = generate_image.invoke({"description": tool_params["description"]}) or ""
+                            if isinstance(result, str) and result.startswith("Error"):
+                                tool_error = result
+                            else:
+                                generated_image = result
                         except Exception as e:
-                            print(f"Error generating image: {e}")
+                            tool_error = f"Error generating image: {e}"
                     
                     elif tool_name == "generate_quiz":
                         try:
                             jsonData = generate_quiz.invoke({"content": tool_params["content"]})
-                            if 'error' not in jsonData:
+                            if isinstance(jsonData, dict) and 'error' in jsonData:
+                                tool_error = jsonData['error']
+                            else:
                                 quiz_data = jsonData
                         except Exception as e:
-                            print(f"Error processing quiz: {e}")
+                            tool_error = f"Error processing quiz: {e}"
 
                     elif tool_name == "save_notes":
                         try:
                             status = save_notes.invoke({"data": tool_params["data"], "user_id": user_id})
-                            self.memory.chat_memory.add_user_message(status)
+                            if isinstance(status, str) and status.startswith("Error"):
+                                tool_error = status
+                            else:
+                                self.memory.chat_memory.add_user_message(status)
                         except Exception as e:
-                            print(f"Error processing quiz: {e}")
+                            tool_error = f"Error saving notes: {e}"
 
             self.memory.chat_memory.add_user_message(text)
             self.memory.chat_memory.add_ai_message(explanation)
+
+            # Only show tool error if nothing else was successful
+            if tool_error and not (generated_image or quiz_data):
+                return {
+                    "text": tool_error,
+                    "image": generated_image,
+                    "quiz": quiz_data
+                }
 
             return {
                 "text": explanation,
@@ -220,7 +247,6 @@ class Agent:
             }
 
         except Exception as e:
-            print(str(e))
             return {
                 "text": f"Error: {str(e)}", 
                 "image": "", 
