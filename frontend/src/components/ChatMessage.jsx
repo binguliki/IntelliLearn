@@ -1,5 +1,5 @@
-import { Avatar, AvatarFallback } from "../components/ui/avatar";
-import { Bot, User } from 'lucide-react';
+import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
+import { User } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogTrigger } from '../components/ui/dialog';
@@ -18,10 +18,22 @@ const ChatMessage = ({ message, onQuizComplete }) => {
 
   return (
     <div className={`flex items-start space-x-3 ${isBot ? '' : 'flex-row-reverse space-x-reverse'} animate-fade-in`}>
-      <Avatar className={`w-8 h-8 shadow-sm ${isBot ? 'bg-gray-700' : 'bg-indigo-700'}`}>
-        <AvatarFallback className="text-gray-200">
-          {isBot ? <Bot className="w-4 h-4" /> : <User className="w-4 h-4" />}
-        </AvatarFallback>
+      <Avatar className={`w-8 h-8 shadow-sm ${isBot ? 'bg-gradient-to-br from-indigo-600 via-purple-700 to-fuchsia-700' : 'bg-indigo-700'}`}>
+        {isBot ? (
+          <>
+            <AvatarImage
+              src="/botavatar.svg"
+              alt="Bot Avatar"
+              className="w-full h-full object-contain bg-transparent mix-blend-screen"
+            />
+            <AvatarFallback className="text-gray-200">
+            </AvatarFallback>
+          </>
+        ) : (
+          <AvatarFallback className="text-gray-200">
+            <User className="w-4 h-4" />
+          </AvatarFallback>
+        )}
       </Avatar>
       <div className={`max-w-xs lg:max-w-md ${isBot ? '' : 'text-left'}`}>
         <div
