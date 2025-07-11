@@ -57,6 +57,7 @@ const Navbar = () => {
         return;
       }
 
+
       window.dispatchEvent(new Event('chat-reset'));
 
       toast({

@@ -108,7 +108,8 @@ class Agent:
             return_messages=True
         )
         self.memory.chat_memory.add_message(SystemMessage(content=SYSTEM_PROMPT))
-    
+        self.SYSTEM_PROMPT = SYSTEM_PROMPT
+        
     def format_quiz_report_summary(self, quiz_report: list) -> str:
         """Format quiz results for processing"""
         total_questions = len(quiz_report)
