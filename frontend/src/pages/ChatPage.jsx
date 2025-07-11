@@ -81,7 +81,8 @@ const ChatPage = () => {
     let payload = {
       message: text,
       image_base64: imageBase64,
-      image_mime_type: imageMimeType
+      image_mime_type: imageMimeType,
+      user_id: user.id
     };
 
     fetch('http://localhost:8000/chat', {

@@ -48,11 +48,14 @@ async def chat_endpoint(request: Request):
     image_base64 = data.get("image_base64", None)
     quiz_report = data.get("quizReport")
     chat_history = data.get("chat_history")
+    user_id = data.get("user_id")
 
     if chat_history:
         agent.memory = agent.memory.__class__(memory_key="chat_history", return_messages=True)
         agent.memory.chat_memory.messages.clear()
         agent.memory.chat_memory.add_message(SystemMessage(content=agent.SYSTEM_PROMPT if hasattr(agent, 'SYSTEM_PROMPT') else ""))
+        agent.memory.chat_memory.add_message(SystemMessage(content=f"(IMPORTANT) USER_ID:{user_id} use this id when ever needed"))
+
         for msg in chat_history:
             if msg.get('sender') == 'user':
                 agent.memory.chat_memory.add_message(HumanMessage(content=msg.get('text', '')))
@@ -60,7 +63,7 @@ async def chat_endpoint(request: Request):
                 agent.memory.chat_memory.add_message(AIMessage(content=msg.get('text', '')))
 
     if quiz_report:
-        response = await agent.process_query({"quizReport": quiz_report})
+        response = await agent.process_query({"quizReport": quiz_report}, user_id=user_id)
         return response
 
     if not message:
@@ -69,7 +72,7 @@ async def chat_endpoint(request: Request):
     content = {"text": message}
     if image_base64:
         content["image_base64"] = image_base64
-    response = await agent.process_query(content)
+    response = await agent.process_query(content, user_id=user_id)
     return response
 
 @app.post("/transcribe")
