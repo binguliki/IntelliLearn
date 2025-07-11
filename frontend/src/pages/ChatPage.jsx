@@ -10,8 +10,7 @@ import { useUser } from '../contexts/UserContext';
 import { fetchChatMemory, upsertChatMemory } from '../libs/db';
 
 const ChatPage = () => {
-  const { user } = useUser();
-  const [messages, setMessages] = useState([]);
+  const { user, messages, setMessages } = useUser();
   const [newMessage, setNewMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [isBackendReady, setIsBackendReady] = useState(false);
@@ -41,7 +40,7 @@ const ChatPage = () => {
   useEffect(() => {
     if (!user) return;
     upsertChatMemory(user.id, messages);
-  }, [messages, user]);
+  }, [user.id, messages]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });

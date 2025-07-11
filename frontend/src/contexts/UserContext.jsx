@@ -15,6 +15,7 @@ export const useUser = () => {
 
 export const UserProvider = ({ children }) => {
   const [user, setUser] = useState(null)
+  const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true)
   const { toast } = useToast()
 
@@ -245,6 +246,8 @@ export const UserProvider = ({ children }) => {
     user,
     loading,
     isAuthenticated: !!user,
+    messages,
+    setMessages,
     signUp,
     signIn,
     signOut,

@@ -10,11 +10,14 @@ export async function fetchChatMemory(userId) {
   return { memory: data?.memory || [], error: null };
 }
 
+// Instead of updating always, we would create a user if they don't exist and update on collision.
 export async function upsertChatMemory(userId, memory) {
   const { error } = await supabase
     .from('Chat Memory')
-    .update({ memory })
-    .eq('user_id', userId);
+    .upsert(
+      [{ user_id: userId, memory }],
+      { onConflict: 'user_id' }
+    );
   return { error };
 }
 

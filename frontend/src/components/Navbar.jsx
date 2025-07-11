@@ -1,7 +1,7 @@
 import { Button } from "./ui/button";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useUser } from '../contexts/UserContext';
-import { deleteChatMemory } from '../libs/db';
+import { upsertChatMemory } from '../libs/db';
 import { useToast } from '../hooks/use-toast';
 
 const Navbar = () => {
@@ -28,7 +28,8 @@ const Navbar = () => {
     }
 
     try {
-      const { error } = await deleteChatMemory(user.id);
+      // Earlier it was deleting the user too, which is not what we want.
+      const { error } = await upsertChatMemory(user.id, []);
       
       if (error) {
         toast({
