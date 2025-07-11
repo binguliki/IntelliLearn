@@ -1,32 +1,33 @@
-# Use an official Python image
+# Use official Python image
 FROM python:3.11-slim
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
-# Set work directory
+# Set working directory
 WORKDIR /src
 
-# Install system dependencies (librosa and soundfile need ffmpeg + build tools)
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
     ffmpeg \
     libsndfile1 \
     build-essential \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Install pipx to install from pyproject.toml cleanly
-RUN pip install --no-cache-dir pipx && \
-    pipx ensurepath
+# Install uv (modern Python package manager)
+RUN pip install uv
 
-# Copy project files
+# Copy requirements and install dependencies using uv
+COPY requirements.txt .
+RUN uv pip install -r requirements.txt
+
+# Copy source code
 COPY . .
-
-# Install project dependencies via pip
-RUN pip install --no-cache-dir .
 
 # Expose FastAPI port
 EXPOSE 5000
 
-# Run the server
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "5000"]
+# Run FastAPI server
+CMD ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "5000"]
