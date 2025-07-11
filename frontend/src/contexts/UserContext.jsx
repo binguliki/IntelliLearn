@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { supabase } from '../libs/supabase'
 import { useToast } from '../hooks/use-toast'
+import { insertUser } from '../libs/db';
 
 const UserContext = createContext()
 
@@ -14,6 +15,7 @@ export const useUser = () => {
 
 export const UserProvider = ({ children }) => {
   const [user, setUser] = useState(null)
+  const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true)
   const { toast } = useToast()
 
@@ -92,6 +94,25 @@ export const UserProvider = ({ children }) => {
           variant: "destructive"
         })
         return { error }
+      }
+      // This piece of code writes a new user into the Users table
+      if (data.user) {
+        const { error: insertError } = await insertUser({
+          id: data.user.id,
+          email: data.user.email,
+          full_name: name
+        });
+        
+        if (insertError) {
+          console.error('Failed to insert user into Users table:', insertError);
+          // Don't fail the signup process if user insertion fails
+          // as the authentication was successful
+          toast({
+            title: "User Profile Warning",
+            description: "Account created but profile data may be incomplete. Please contact support if you experience issues.",
+            variant: "destructive"
+          });
+        }
       }
 
       if (data.user && !data.session) {
@@ -225,6 +246,8 @@ export const UserProvider = ({ children }) => {
     user,
     loading,
     isAuthenticated: !!user,
+    messages,
+    setMessages,
     signUp,
     signIn,
     signOut,

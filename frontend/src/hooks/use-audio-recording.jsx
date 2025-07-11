@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useToast } from './use-toast.jsx';
 
-export const useAudioRecording = (sessionId) => {
+export const useAudioRecording = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [audioLevel, setAudioLevel] = useState(0);
@@ -142,7 +142,6 @@ export const useAudioRecording = (sessionId) => {
       
       const formData = new FormData();
       formData.append('audio_file', wavBlob, 'recording.wav');
-      formData.append('session_id', sessionId);
       
       const response = await fetch('http://localhost:8000/transcribe', {
         method: 'POST',
@@ -160,7 +159,6 @@ export const useAudioRecording = (sessionId) => {
         onTranscriptionComplete(transcribedText);
       }
     } catch (error) {
-      console.error('Error processing audio:', error);
       toast({
         title: "Transcription failed",
         description: "Failed to transcribe audio. Please try again.",

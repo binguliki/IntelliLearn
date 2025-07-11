@@ -6,15 +6,14 @@ import { useAudioRecording } from "../hooks/use-audio-recording.jsx";
 import ChatMessage from "../components/ChatMessage";
 import TypingIndicator from "../components/TypingIndicator";
 import Particles from '../components/ui/particles';
+import { useUser } from '../contexts/UserContext';
+import { fetchChatMemory, upsertChatMemory } from '../libs/db';
 
 const ChatPage = () => {
-  const [messages, setMessages] = useState(() => {
-    const savedMessages = localStorage.getItem('chat_messages');
-    return savedMessages ? JSON.parse(savedMessages) : [];
-  });
+  const { user, messages, setMessages } = useUser();
   const [newMessage, setNewMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const [isBackendReady, setIsBackendReady] = useState(true);
+  const [isBackendReady, setIsBackendReady] = useState(false);
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
   const [selectedFile, setSelectedFile] = useState(null);
@@ -22,19 +21,26 @@ const ChatPage = () => {
   const [imageBase64, setImageBase64] = useState(null);
   const [micError, setMicError] = useState("");
 
-  let sessionId = localStorage.getItem('session_id');
-  if (!sessionId) {
-    sessionId = crypto.randomUUID();
-    localStorage.setItem('session_id', sessionId);
-  }
-  
   const {
     isRecording,
     isTranscribing,
     startRecording,
     stopRecording,
     renderWaveform,
-  } = useAudioRecording(sessionId);
+  } = useAudioRecording();
+  
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const { memory } = await fetchChatMemory(user.id);
+      setMessages(memory);
+    })();
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+    upsertChatMemory(user.id, messages);
+  }, [user.id, messages]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -58,10 +64,6 @@ const ChatPage = () => {
     checkBackendReady();
   }, []);
 
-  useEffect(() => {
-    localStorage.setItem('chat_messages', JSON.stringify(messages));
-  }, [messages]);
-
   const handleSendMessage = ({ text, file, previewUrl, imageBase64, reset }) => {
     if (!text.trim() && !file) return;
     let userMessage = {
@@ -76,12 +78,12 @@ const ChatPage = () => {
     setIsTyping(true);
 
     const imageMimeType = file ? file.type : null;
-    const payload = {
+    let payload = {
       message: text,
-      session_id: sessionId,
       image_base64: imageBase64,
       image_mime_type: imageMimeType
     };
+
     fetch('http://localhost:8000/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

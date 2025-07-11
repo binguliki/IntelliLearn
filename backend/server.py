@@ -1,9 +1,12 @@
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
+
 from src.client import Agent
 from src.speech_to_text import get_speech_processor, is_speech_model_ready
+from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 
 load_dotenv()
 
@@ -27,6 +30,13 @@ app.add_middleware(
 
 agent = Agent()
 
+@app.post("/reset")
+async def reset_endpoint(request: Request):
+    data = await request.json()
+    global agent
+    agent = Agent()
+    return JSONResponse({"status": "reset"})
+
 @app.get("/ready")
 async def ready_check():
     return {"status": "ready", "speech_model_ready": is_speech_model_ready()}
@@ -36,15 +46,25 @@ async def chat_endpoint(request: Request):
     data = await request.json()
     message = data.get("message")
     image_base64 = data.get("image_base64", None)
-    session_id = data.get("session_id")
     quiz_report = data.get("quizReport")
+    chat_history = data.get("chat_history")
+
+    if chat_history:
+        agent.memory = agent.memory.__class__(memory_key="chat_history", return_messages=True)
+        agent.memory.chat_memory.messages.clear()
+        agent.memory.chat_memory.add_message(SystemMessage(content=agent.SYSTEM_PROMPT if hasattr(agent, 'SYSTEM_PROMPT') else ""))
+        for msg in chat_history:
+            if msg.get('sender') == 'user':
+                agent.memory.chat_memory.add_message(HumanMessage(content=msg.get('text', '')))
+            elif msg.get('sender') == 'bot':
+                agent.memory.chat_memory.add_message(AIMessage(content=msg.get('text', '')))
 
     if quiz_report:
         response = await agent.process_query({"quizReport": quiz_report})
         return response
 
-    if not message or not session_id:
-        return {"error": "Message and session_id required"}
+    if not message:
+        return {"error": "Message required"}
     
     content = {"text": message}
     if image_base64:
@@ -55,7 +75,6 @@ async def chat_endpoint(request: Request):
 @app.post("/transcribe")
 async def transcribe_endpoint(
     audio_file: UploadFile = File(...),
-    session_id: str = Form(...)
 ):
     try:
         if not audio_file:
@@ -77,7 +96,6 @@ async def transcribe_endpoint(
         
         return {
             "text": transcription,
-            "session_id": session_id,
             "success": True
         }
         

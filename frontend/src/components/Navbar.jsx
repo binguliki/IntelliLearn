@@ -1,28 +1,62 @@
 import { Button } from "./ui/button";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { MessageCircle } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
+import { upsertChatMemory } from '../libs/db';
+import { useToast } from '../hooks/use-toast';
 
 const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { isAuthenticated, signOut, user } = useUser();
+  const { toast } = useToast();
 
   const handleLogout = async () => {
     const { error } = await signOut();
     if (!error) {
-      localStorage.removeItem('chat_messages');
-      localStorage.removeItem('session_id');
       navigate('/');
     }
   };
 
-  const handleReset = () => {
-    localStorage.removeItem('chat_messages');
-    const newSessionId = crypto.randomUUID();
-    localStorage.setItem('session_id', newSessionId);
-    window.location.reload();
+  const handleReset = async () => {
+    if (!user) {
+      toast({
+        title: "Reset Failed",
+        description: "User not authenticated",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      // Earlier it was deleting the user too, which is not what we want.
+      const { error } = await upsertChatMemory(user.id, []);
+      
+      if (error) {
+        toast({
+          title: "Reset Failed",
+          description: "Failed to clear chat history. Please try again.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      toast({
+        title: "Chat Cleared",
+        description: "Your chat history has been successfully cleared.",
+      });
+
+      // Navigate to refresh the page and clear local state
+      navigate(location.pathname, { replace: true });
+    } catch (error) {
+      console.error('Unexpected error during chat reset:', error);
+      toast({
+        title: "Reset Failed",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
+
 
   return (
     <nav
@@ -86,9 +120,6 @@ const Navbar = () => {
           </>
         ) : (
           <>
-            <div className="text-sm text-gray-300 mr-2">
-              Welcome, {user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User'}!
-            </div>
             <Link
               to="/chat"
               aria-label="Go to Chat"
@@ -124,6 +155,9 @@ const Navbar = () => {
             >
               Logout
             </Button>
+            <div className="w-12 h-12 bg-gradient-to-br hover:cursor-pointer from-indigo-500 to-purple-600 rounded-full mx-auto flex items-center justify-center">
+              <span className="text-white font-bold text-md">{(user?.user_metadata?.full_name?.split(' ').map(n => n[0]).join('') ?? '') || user?.email?.split('@')[0] || 'User'}</span>
+            </div>
           </>
         )}
       </div>
