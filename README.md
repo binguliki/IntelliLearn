@@ -70,7 +70,17 @@ IntelliLearn enhances the learning experience by leveraging advanced AI to deliv
 
 ## 4. Demo Video
 
-> *Demo coming soon...*
+<details>
+  <summary>
+    <strong>&nbsp;Watch Demo Video</strong>
+  </summary>
+  <br>
+  <p align="center">
+    <a href="https://youtu.be/sKV0IyaqCMo" target="_blank">
+      <img src="https://img.youtube.com/vi/sKV0IyaqCMo/maxresdefault.jpg" alt="Watch the demo video" width="100%" />
+    </a>
+  </p>
+</details>
 
 ## 5. Project Structure
 
