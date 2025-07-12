@@ -148,11 +148,16 @@ export const useAudioRecording = () => {
         body: formData
       });
       
-      if (!response.ok) {
-        throw new Error(`Transcription failed: ${response.status}`);
-      }
-      
       const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.detail || `HTTP error: ${response.status}`);
+      }
+
+      if (!data.success || data.error) {
+        throw new Error(data.error || 'Transcription failed');
+      }
+
       const transcribedText = data.text || '';
       
       if (onTranscriptionComplete) {
@@ -161,7 +166,7 @@ export const useAudioRecording = () => {
     } catch (error) {
       toast({
         title: "Transcription failed",
-        description: "Failed to transcribe audio. Please try again.",
+        description: new String(error),
         variant: "destructive",
       });
     } finally {

@@ -1,5 +1,5 @@
 from dotenv import load_dotenv
-from fastapi import FastAPI, Request, UploadFile, File
+from fastapi import FastAPI, Request, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
@@ -81,16 +81,16 @@ async def transcribe_endpoint(
 ):
     try:
         if not audio_file:
-            return {"error": "Audio file required"}
+            raise HTTPException(status_code=400, detail="Audio file required")
         
         if not audio_file.content_type.startswith('audio/'):
-            return {"error": "File must be an audio file"}
+            raise HTTPException(status_code=400, detail="File must be an audio file")
         
         if not is_speech_model_ready():
-            return {
-                "error": "Speech-to-text model is still loading. Please try again soon.",
-                "success": False
-            }
+            raise HTTPException(
+                status_code=503, 
+                detail="Speech-to-text model is still loading. Please try again soon."
+            )
         
         audio_content = await audio_file.read()
         
@@ -102,12 +102,11 @@ async def transcribe_endpoint(
             "success": True
         }
         
+    except HTTPException:
+        raise
     except Exception as e:
         print(f"Transcription error: {e}")
-        return {
-            "error": f"Transcription failed: {str(e)}",
-            "success": False
-        }
+        raise HTTPException(status_code=500, detail=f"Transcription failed: {str(e)}")
 
 if __name__ == "__main__":
     import uvicorn
