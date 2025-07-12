@@ -73,7 +73,7 @@ const Dashboard = () => {
               <iframe
                 width="100%"
                 height="100%"
-                src="https://www.youtube.com/embed/QlYrNC_1Xmk"
+                src="https://www.youtube.com/embed/sKV0IyaqCMo"
                 title="IntelliLearn Demo Video"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
