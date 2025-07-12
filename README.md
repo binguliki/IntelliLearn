@@ -29,19 +29,23 @@
     </tr>
     <tr>
       <td>5</td>
-      <td><a href="#5-tech-stack">Tech Stack</a></td>
+      <td><a href="#5-project-structure">Project Structure</a></td>
     </tr>
     <tr>
       <td>6</td>
-      <td><a href="#6-how-to-run">How to Run</a></td>
+      <td><a href="#6-tech-stack">Tech Stack</a></td>
     </tr>
     <tr>
       <td>7</td>
-      <td><a href="#7-contributors">Contributors</a></td>
+      <td><a href="#7-how-to-run">How to Run</a></td>
     </tr>
     <tr>
       <td>8</td>
-      <td><a href="#8-license">License</a></td>
+      <td><a href="#8-contributors">Contributors</a></td>
+    </tr>
+    <tr>
+      <td>9</td>
+      <td><a href="#9-license">License</a></td>
     </tr>
   </tbody>
 </table>
@@ -68,7 +72,40 @@ IntelliLearn enhances the learning experience by leveraging advanced AI to deliv
 
 > *Demo coming soon...*
 
-## 5. Tech Stack
+## 5. Project Structure
+
+```
+backend/
+├── src/
+│   ├── client.py
+│   ├── speech_to_text.py
+│   ├── supabaseClient.py
+│   └── tools.py
+├── Dockerfile
+├── pyproject.toml
+├── server.py
+
+frontend/
+├── public/
+│   └── intellilearn.png
+├── src/
+│   ├── components/
+│   │   ├── ui/
+│   │   └── (other shared components)
+│   ├── contexts/
+│   ├── hooks/
+│   ├── libs/
+│   ├── pages/
+│   ├── App.jsx
+│   └── main.jsx
+├── Dockerfile
+├── package.json
+
+docker-compose.yml
+README.md
+```
+
+## 6. Tech Stack
 
 ### Backend
 
@@ -96,7 +133,7 @@ IntelliLearn enhances the learning experience by leveraging advanced AI to deliv
 * **Docker**: Containerization for consistent environments
 * **Docker Compose**: Multi-container orchestration
 
-## 6. How to Run?
+## 7. How to Run?
 
 ### Prerequisites
 
@@ -145,12 +182,12 @@ IntelliLearn enhances the learning experience by leveraging advanced AI to deliv
    * **Frontend**: [http://localhost:5173](http://localhost:5173)
    * **Backend**: [http://localhost:8000](http://localhost:8000)
 
-## 7. Contributors
+## 8. Contributors
 
 * **[Bingumalla Likith](https://github.com/binguliki)** – AI Developer & Project Lead
 * **[Vydhika Talatam](https://github.com/vtalatam05)** – Web Developer
 * **[Ibrahim Chikani](https://github.com/IbrahimDev00)** – Full Stack Developer
 
-## 8. License
+## 9. License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
