@@ -3,45 +3,45 @@
 ![IntelliLearn Banner](https://github.com/user-attachments/assets/da4e5766-fdce-4a5b-a808-65c5af7c64cd)
 
 ## Index
-<table class="w-full border-collapse border border-gray-300">
+<table>
   <thead>
-    <tr class="bg-gray-100">
-      <th class="border border-gray-300 p-2 text-left">S.No.</th>
-      <th class="border border-gray-300 p-2 text-left">Section</th>
+    <tr>
+      <th>S.No.</th>
+      <th>Section</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td class="border border-gray-300 p-2">1</td>
-      <td class="border border-gray-300 p-2"><a href="#introduction">Introduction</a></td>
+      <td>1</td>
+      <td><a href="#1-introduction">Introduction</a></td>
     </tr>
     <tr>
-      <td class="border border-gray-300 p-2">2</td>
-      <td class="border border-gray-300 p-2"><a href="#overview">Overview</a></td>
+      <td>2</td>
+      <td><a href="#2-overview">Overview</a></td>
     </tr>
     <tr>
-      <td class="border border-gray-300 p-2">3</td>
-      <td class="border border-gray-300 p-2"><a href="#features">Features</a></td>
+      <td>3</td>
+      <td><a href="#3-features">Features</a></td>
     </tr>
     <tr>
-      <td class="border border-gray-300 p-2">4</td>
-      <td class="border border-gray-300 p-2"><a href="#demo-video">Demo Video</a></td>
+      <td>4</td>
+      <td><a href="#4-demo-video">Demo Video</a></td>
     </tr>
     <tr>
-      <td class="border border-gray-300 p-2">5</td>
-      <td class="border border-gray-300 p-2"><a href="#tech-stack">Tech Stack</a></td>
+      <td>5</td>
+      <td><a href="#5-tech-stack">Tech Stack</a></td>
     </tr>
     <tr>
-      <td class="border border-gray-300 p-2">6</td>
-      <td class="border border-gray-300 p-2"><a href="#how-to-run">How to Run?</a></td>
+      <td>6</td>
+      <td><a href="#6-how-to-run">How to Run</a></td>
     </tr>
     <tr>
-      <td class="border border-gray-300 p-2">7</td>
-      <td class="border border-gray-300 p-2"><a href="#contributors">Contributors</a></td>
+      <td>7</td>
+      <td><a href="#7-contributors">Contributors</a></td>
     </tr>
     <tr>
-      <td class="border border-gray-300 p-2">8</td>
-      <td class="border border-gray-300 p-2"><a href="#license">License</a></td>
+      <td>8</td>
+      <td><a href="#8-license">License</a></td>
     </tr>
   </tbody>
 </table>
