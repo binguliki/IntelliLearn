@@ -58,6 +58,9 @@ IntelliLearn is an innovative AI-powered assistant developed under the Intel® U
 
 IntelliLearn enhances the learning experience by leveraging advanced AI to deliver tailored study recommendations, streamlined workflows, and tools to reduce academic stress. It empowers users with adaptive, interactive, and accessible learning solutions.
 
+> [!NOTE]
+> For complete project documentation, please refer to the [IntelliLearn PDF](https://github.com/binguliki/IntelliLearn/blob/main/intellilearn.pdf).
+
 ## 3. Features
 
 * **Intelligent and Adaptive Learning**: Delivers personalized responses, adjusting explanation complexity and pace based on user comprehension.
