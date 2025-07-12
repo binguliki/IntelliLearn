@@ -148,7 +148,6 @@ def generate_quiz(content: str) -> Dict:
     except Exception as e:
         return {"error": f"Error processing quiz: {str(e)}"}
 
-# here the user_id is kept optional so model doesn't keep looking for it.
 @tool
 def save_notes(data: str, user_id: str) -> str:
     '''
@@ -186,7 +185,7 @@ def save_notes(data: str, user_id: str) -> str:
                 "notes": updated_notes
             }).eq("user_id", user_id).execute()
 
-        return "Note successfully saved to the database."
+        return "Notes successfully saved to the database."
 
     except Exception as e:
-        return f"Unexpected error: {str(e)}"
+        return f"Error: {str(e)}"

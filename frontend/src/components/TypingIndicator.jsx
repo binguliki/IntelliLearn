@@ -11,9 +11,6 @@ const TypingIndicator = () => {
           alt="Bot Avatar" 
           className="aspect-square h-full w-full object-contain bg-transparent"
         />
-        <AvatarFallback className="text-white">
-          <Bot className="w-4 h-4" />
-        </AvatarFallback>
       </Avatar>
       
       <div className="bg-gray-800 border border-gray-700 rounded-2xl px-4 py-3 shadow-sm">
