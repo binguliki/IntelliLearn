@@ -23,14 +23,6 @@ def get_model_provider() -> ModelProvider:
     if provider == "gemini":
         return GeminiProvider()
 
-    # Future providers:
-    # elif provider == "openai":
-    #     from .openai_provider import OpenAIProvider
-    #     return OpenAIProvider()
-    # elif provider == "anthropic":
-    #     from .anthropic_provider import AnthropicProvider
-    #     return AnthropicProvider()
-
     raise ValueError(
         f"Unsupported MODEL_PROVIDER: '{provider}'. "
         f"Supported values: 'gemini'."

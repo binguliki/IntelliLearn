@@ -26,14 +26,8 @@ class Agent:
     """
 
     def __init__(self):
-        # Resolve the model provider from env — swappable without code changes.
         provider = get_model_provider()
-
-        # Base tools that don't need per-request context.
-        # save_notes is created per-request via make_save_notes_tool(jwt).
         self._base_tools = [generate_image, generate_quiz]
-
-        # LLM with base tools pre-bound; save_notes is injected at query time.
         self.llm = provider.get_llm(self._base_tools)
 
         self.memory = ConversationBufferMemory(
@@ -96,9 +90,6 @@ class Agent:
         else:
             text = str(user_input).strip()
 
-        # ------------------------------------------------------------------ #
-        # Quiz report path — no tool calls needed, just LLM feedback.        #
-        # ------------------------------------------------------------------ #
         if quiz_report:
             try:
                 quiz_summary = self.format_quiz_report_summary(quiz_report)
@@ -123,11 +114,7 @@ class Agent:
                 "quiz": None,
             }
 
-        # ------------------------------------------------------------------ #
-        # Normal chat path — uses JWT-bound LLM so save_notes is authorised. #
-        # ------------------------------------------------------------------ #
         try:
-            # Bind save_notes with the user's JWT for this request.
             llm = self._get_llm_with_save_notes(jwt)
 
             messages = self.memory.chat_memory.messages.copy()
@@ -180,7 +167,7 @@ class Agent:
                         try:
                             status = save_notes_tool.invoke({
                                 "data": tool_params["data"],
-                                "user_id": user_id,  # Comes from validated JWT, not request body.
+                                "user_id": user_id,
                             })
                             if isinstance(status, str) and status.startswith("Error"):
                                 tool_error = status
