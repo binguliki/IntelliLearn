@@ -7,7 +7,7 @@ import { useState, useRef, useEffect } from "react";
 const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAuthenticated, signOut, user, resetChat } = useUser();
+  const { isAuthenticated, signOut, user, accessToken, resetChat } = useUser();
   const { toast } = useToast();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -47,6 +47,7 @@ const Navbar = () => {
     }
 
     try {
+      // 1. Clear Supabase chat history
       const { error } = await resetChat();
       if (error) {
         toast({
@@ -57,12 +58,25 @@ const Navbar = () => {
         return;
       }
 
+      // 2. Reset backend session (clears in-memory agent + Chroma RAG collection)
+      try {
+        await fetch('http://localhost:8000/reset', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+      } catch (backendErr) {
+        // Non-fatal — Supabase history is already cleared; log and continue.
+        console.warn('[Navbar] Backend /reset call failed:', backendErr);
+      }
 
+      // 3. Notify all components to clear their local state
       window.dispatchEvent(new Event('chat-reset'));
 
       toast({
         title: "Chat Cleared",
-        description: "Your chat history has been successfully cleared.",
+        description: "Your chat history and uploaded documents have been cleared.",
       });
     } catch (error) {
       console.error('Unexpected error during chat reset:', error);

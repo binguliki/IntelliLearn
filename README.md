@@ -65,6 +65,7 @@ IntelliLearn enhances the learning experience by leveraging advanced AI to deliv
 
 * **Intelligent and Adaptive Learning**: Delivers personalized responses, adjusting explanation complexity and pace based on user comprehension.
 * **Multi-Modal Input Support**: Supports text, voice, and image inputs for natural and accessible interactions.
+* **Document-Specific Q&A**: Students can upload PDF documents and query them using the `/uploads` prefix in chat. A retrieval-augmented generation pipeline semantically searches the document and grounds the model's response in the relevant content.
 * **Visual and Diagram-Based Explanations**: Generates custom diagrams, concept maps, and interactive visuals to simplify complex topics.
 * **Automated Notes Generation**: Creates structured notes and concise summaries during sessions to aid revision.
 * **Interactive Quiz Assessments**: Offers adaptive quizzes that adjust difficulty based on performance and track progress.
@@ -90,7 +91,23 @@ IntelliLearn enhances the learning experience by leveraging advanced AI to deliv
 ```
 backend/
 ├── src/
+│   ├── prompts/
+│   │   ├── agent_system_prompt.txt
+│   │   └── image_generation_system_prompt.txt
+│   ├── providers/
+│   │   ├── base.py
+│   │   ├── factory.py
+│   │   ├── gemini_provider.py
+│   │   ├── gemini_embedding_provider.py
+│   │   ├── huggingface_embedding_provider.py
+│   │   └── whisper_stt_provider.py
+│   ├── rag/
+│   │   ├── pdf_processor.py
+│   │   ├── rag_pipeline.py
+│   │   └── vector_store.py
+│   ├── auth.py
 │   ├── client.py
+│   ├── session_manager.py
 │   ├── speech_to_text.py
 │   ├── supabaseClient.py
 │   └── tools.py
@@ -100,15 +117,32 @@ backend/
 
 frontend/
 ├── public/
+│   ├── botavatar.svg
 │   └── intellilearn.png
 ├── src/
 │   ├── components/
 │   │   ├── ui/
-│   │   └── (other shared components)
+│   │   ├── ChatMessage.jsx
+│   │   ├── Navbar.jsx
+│   │   ├── PdfUploadButton.jsx
+│   │   ├── ProtectedRoute.jsx
+│   │   ├── QuizMessage.jsx
+│   │   └── TypingIndicator.jsx
 │   ├── contexts/
+│   │   └── UserContext.jsx
 │   ├── hooks/
+│   │   ├── use-audio-recording.jsx
+│   │   └── use-toast.jsx
 │   ├── libs/
+│   │   ├── db.js
+│   │   ├── supabase.js
+│   │   └── utils.js
 │   ├── pages/
+│   │   ├── ChatPage.jsx
+│   │   ├── Dashboard.jsx
+│   │   ├── LoginPage.jsx
+│   │   ├── NotesDashboard.jsx
+│   │   └── SignUpPage.jsx
 │   ├── App.jsx
 │   └── main.jsx
 ├── Dockerfile

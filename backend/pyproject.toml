@@ -19,4 +19,8 @@ dependencies = [
     "uvicorn>=0.20.0",
     "python-multipart>=0.0.6",
     "supabase>=2.16.0",
+    "pymupdf>=1.28.2",
+    "chromadb>=1.5.9",
+    "langchain-chroma>=0.2.6",
+    "langchain-huggingface>=0.3.1",
 ]

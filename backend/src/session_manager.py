@@ -4,6 +4,7 @@ import threading
 from typing import Dict, Tuple
 
 from .client import Agent
+from .rag.rag_pipeline import rag_pipeline
 
 # Session TTL in seconds (default: 2 hours). Override via SESSION_TTL_SECONDS env var.
 _SESSION_TTL = int(os.getenv("SESSION_TTL_SECONDS", str(2 * 60 * 60)))
@@ -48,13 +49,16 @@ class SessionManager:
     def reset_session(self, user_id: str) -> None:
         """
         Destroy the session for a user, forcing a fresh Agent on next access.
+        Also purges any RAG data (Chroma collection + PDF metadata) for the user.
         """
         with self._lock:
             self._sessions.pop(user_id, None)
+        rag_pipeline.delete_user_data(user_id)
 
     def _cleanup_expired_sessions(self) -> None:
         """
         Remove sessions that have been idle longer than SESSION_TTL_SECONDS.
+        Also purges RAG data for each expired user.
         Must be called while holding self._lock.
         """
         now = time.monotonic()
@@ -65,6 +69,7 @@ class SessionManager:
         ]
         for uid in expired:
             del self._sessions[uid]
+            rag_pipeline.delete_user_data(uid)
 
 
 # Singleton instance shared across the application lifetime

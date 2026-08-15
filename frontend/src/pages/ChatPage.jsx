@@ -7,6 +7,7 @@ import ChatMessage from "../components/ChatMessage";
 import TypingIndicator from "../components/TypingIndicator";
 import Particles from '../components/ui/particles';
 import { useUser } from '../contexts/UserContext';
+import PdfUploadButton, { PdfChips } from '../components/PdfUploadButton';
 
 const ChatPage = () => {
   const { user, accessToken, chatHistory, saveMessagesToDatabase } = useUser();
@@ -21,6 +22,10 @@ const ChatPage = () => {
   const [previewUrl, setPreviewUrl] = useState(null);
   const [imageBase64, setImageBase64] = useState(null);
   const [micError, setMicError] = useState("");
+
+  // PDF upload state
+  const [uploadedPdfs, setUploadedPdfs] = useState([]);
+  const [pdfError, setPdfError] = useState("");
 
   const {
     isRecording,
@@ -37,7 +42,11 @@ const ChatPage = () => {
   }, [messages, user, saveMessagesToDatabase]);
 
   useEffect(() => {
-    const handleChatReset = () => setMessages([]);
+    const handleChatReset = () => {
+      setMessages([]);
+      setUploadedPdfs([]);
+      setPdfError("");
+    };
     window.addEventListener('chat-reset', handleChatReset);
     return () => window.removeEventListener('chat-reset', handleChatReset);
   }, []);
@@ -66,9 +75,23 @@ const ChatPage = () => {
 
   const handleSendMessage = ({ text, file, previewUrl, imageBase64, reset }) => {
     if (!text.trim() && !file) return;
+
+    // Detect /uploads prefix and strip it from the displayed + sent message.
+    const isRagQuery = text.trimStart().startsWith('/uploads');
+    const cleanText = isRagQuery
+      ? text.trimStart().replace(/^\/uploads\s*/i, '').trim()
+      : text;
+
+    // Don't send an empty query after stripping the prefix.
+    if (!cleanText && !file) {
+      setPdfError('Please add a question after /uploads, e.g. "/uploads explain chapter 2"');
+      return;
+    }
+    setPdfError('');
+
     let userMessage = {
       id: messages.length + 1,
-      text: text,
+      text: isRagQuery ? `/uploads ${cleanText}` : cleanText,
       sender: 'user',
       timestamp: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
       image: previewUrl ? previewUrl : null
@@ -79,9 +102,10 @@ const ChatPage = () => {
 
     const imageMimeType = file ? file.type : null;
     let payload = {
-      message: text,
+      message: cleanText,
       image_base64: imageBase64,
       image_mime_type: imageMimeType,
+      use_rag: isRagQuery,
       // NOTE: user_id is no longer sent — the backend resolves it from the JWT.
     };
 
@@ -151,6 +175,28 @@ const ChatPage = () => {
     } else {
       setPreviewUrl(null);
       setImageBase64(null);
+    }
+  };
+
+  const handlePdfUploadSuccess = (data) => {
+    setUploadedPdfs(prev => [...prev, { filename: data.filename, chunks: data.chunks }]);
+    setPdfError('');
+  };
+
+  const handlePdfUploadError = (errorMsg) => {
+    setPdfError(errorMsg);
+  };
+
+  const handleClearPdfs = async () => {
+    try {
+      await fetch('http://localhost:8000/reset', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      setUploadedPdfs([]);
+      setPdfError('');
+    } catch {
+      setPdfError('Failed to clear PDFs. Please try again.');
     }
   };
 
@@ -251,6 +297,11 @@ const ChatPage = () => {
           <div ref={messagesEndRef} />
         </div>
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-full max-w-3xl px-4 z-20">
+          {/* PDF chips + error shown above the input bar */}
+          <PdfChips uploadedPdfs={uploadedPdfs} onRemoveAll={handleClearPdfs} />
+          {pdfError && (
+            <div className="text-red-400 text-xs mb-1 px-1">{pdfError}</div>
+          )}
           <form onSubmit={e => {
             e.preventDefault();
             handleSendMessage({
@@ -278,6 +329,14 @@ const ChatPage = () => {
                 <Paperclip className="w-5 h-5 text-gray-300" />
               </button>
             </div>
+            {/* PDF upload button — separate from image paperclip */}
+            <PdfUploadButton
+              accessToken={accessToken}
+              uploadedPdfs={uploadedPdfs}
+              onUploadSuccess={handlePdfUploadSuccess}
+              onUploadError={handlePdfUploadError}
+              disabled={!isBackendReady}
+            />
             <input
               type="file"
               accept="image/*"
@@ -323,7 +382,13 @@ const ChatPage = () => {
                 <div className="flex-1 relative flex items-center min-w-0">
                   <Input
                     type="text"
-                    placeholder={isTranscribing ? "Transcribing audio..." : "Type your message..."}
+                    placeholder={
+                      isTranscribing
+                        ? "Transcribing audio..."
+                        : uploadedPdfs.length > 0
+                        ? 'Ask normally, or type /uploads <question> to query your PDFs...'
+                        : "Type your message..."
+                    }
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     borderless

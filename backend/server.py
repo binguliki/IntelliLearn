@@ -9,6 +9,8 @@ from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 from src.auth import get_current_user
 from src.session_manager import session_manager
 from src.speech_to_text import get_speech_processor, is_speech_model_ready
+from src.rag.rag_pipeline import rag_pipeline
+from src.rag.pdf_processor import PDFValidationError
 
 load_dotenv()
 
@@ -42,7 +44,7 @@ async def ready_check():
 
 
 # ---------------------------------------------------------------------------
-# Reset — clears only the calling user's session
+# Reset — clears only the calling user's session (and their RAG data)
 # ---------------------------------------------------------------------------
 
 @app.post("/reset")
@@ -69,6 +71,7 @@ async def chat_endpoint(
     image_base64 = data.get("image_base64", None)
     quiz_report = data.get("quizReport")
     chat_history = data.get("chat_history")
+    use_rag = data.get("use_rag", False)
 
     # Fetch (or create) this user's isolated agent session.
     agent = session_manager.get_or_create_session(user_id)
@@ -102,8 +105,110 @@ async def chat_endpoint(
     if image_base64:
         content["image_base64"] = image_base64
 
+    # If the /uploads prefix was used, retrieve relevant document context
+    # and prepend it to the user's message before invoking the agent.
+    if use_rag:
+        if rag_pipeline.get_pdf_count(user_id) == 0:
+            return {
+                "text": (
+                    "You haven't uploaded any PDF documents yet. "
+                    "Use the PDF upload button to add documents, then ask your question with the `/uploads` prefix."
+                ),
+                "image": "",
+                "quiz": None,
+            }
+
+        try:
+            context = await rag_pipeline.retrieve_context(user_id, message)
+        except Exception as e:
+            print(f"[/chat] RAG retrieval error for user {user_id}: {e}")
+            return {
+                "text": (
+                    "Sorry, I ran into a problem searching your documents. "
+                    "This is usually a temporary issue — please try again in a moment."
+                ),
+                "image": "",
+                "quiz": None,
+            }
+
+        if context is None:
+            return {
+                "text": (
+                    "I couldn't find relevant information in your uploaded documents for that question. "
+                    "Try rephrasing, or ask without the `/uploads` prefix for a general answer."
+                ),
+                "image": "",
+                "quiz": None,
+            }
+
+        # Prepend the retrieved context to the user's message text.
+        content["text"] = context + message
+
     response = await agent.process_query(content, user_id=user_id, jwt=jwt)
     return response
+
+
+# ---------------------------------------------------------------------------
+# Upload PDF — ingest a PDF into the user's RAG vector store
+# ---------------------------------------------------------------------------
+
+@app.post("/upload-pdf")
+async def upload_pdf_endpoint(
+    file: UploadFile = File(...),
+    user_id: str = Depends(get_current_user),
+):
+    """
+    Accept a PDF file upload, validate it, extract text, chunk it, embed it,
+    and store the embeddings in the user's ChromaDB collection.
+
+    Limits (configurable via env vars):
+        MAX_PDF_COUNT   - max PDFs per session (default: 2)
+        MAX_PDF_SIZE_MB - max file size in MB (default: 10)
+    """
+    # Validate MIME type early before reading the full file.
+    if file.content_type not in ("application/pdf", "application/octet-stream"):
+        raise HTTPException(
+            status_code=400,
+            detail="Only PDF files are accepted. Please upload a .pdf file.",
+        )
+
+    pdf_bytes = await file.read()
+
+    try:
+        result = await rag_pipeline.ingest_pdf(
+            user_id=user_id,
+            pdf_bytes=pdf_bytes,
+            filename=file.filename or "document.pdf",
+        )
+    except PDFValidationError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        print(f"[upload-pdf] Unexpected error for user {user_id}: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to process PDF: {str(e)}",
+        )
+
+    return JSONResponse({
+        "status": "ingested",
+        "filename": result["filename"],
+        "chunks": result["chunks"],
+        "pdf_count": result["pdf_count"],
+    })
+
+
+# ---------------------------------------------------------------------------
+# Uploaded PDFs — list documents currently indexed for the session
+# ---------------------------------------------------------------------------
+
+@app.get("/uploaded-pdfs")
+async def uploaded_pdfs_endpoint(user_id: str = Depends(get_current_user)):
+    """Return metadata for all PDFs currently indexed in the user's session."""
+    pdfs = rag_pipeline.get_pdf_list(user_id)
+    return JSONResponse({
+        "pdfs": pdfs,
+        "count": len(pdfs),
+    })
 
 
 # ---------------------------------------------------------------------------
