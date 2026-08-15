@@ -9,7 +9,7 @@ import Particles from '../components/ui/particles';
 import { useUser } from '../contexts/UserContext';
 
 const ChatPage = () => {
-  const { user, chatHistory, saveMessagesToDatabase } = useUser();
+  const { user, accessToken, chatHistory, saveMessagesToDatabase } = useUser();
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -28,7 +28,7 @@ const ChatPage = () => {
     startRecording,
     stopRecording,
     renderWaveform,
-  } = useAudioRecording();
+  } = useAudioRecording({ accessToken });
 
   useEffect(() => {
     if (user && messages.length > 0) {
@@ -82,7 +82,7 @@ const ChatPage = () => {
       message: text,
       image_base64: imageBase64,
       image_mime_type: imageMimeType,
-      user_id: user.id
+      // NOTE: user_id is no longer sent — the backend resolves it from the JWT.
     };
 
     // Only send chat history if model is not initialized
@@ -93,7 +93,10 @@ const ChatPage = () => {
 
     fetch('http://localhost:8000/chat', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${accessToken}`,
+      },
       body: JSON.stringify(payload)
     })
       .then(async res => {
@@ -178,7 +181,10 @@ const ChatPage = () => {
     try {
       const res = await fetch('http://localhost:8000/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
+        },
         body: JSON.stringify({ quizReport })
       });
       const data = await res.json();

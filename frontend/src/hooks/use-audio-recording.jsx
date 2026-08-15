@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useToast } from './use-toast.jsx';
 
-export const useAudioRecording = () => {
+export const useAudioRecording = ({ accessToken } = {}) => {
   const [isRecording, setIsRecording] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [audioLevel, setAudioLevel] = useState(0);
@@ -145,6 +145,9 @@ export const useAudioRecording = () => {
       
       const response = await fetch('http://localhost:8000/transcribe', {
         method: 'POST',
+        headers: {
+          ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {}),
+        },
         body: formData
       });
       

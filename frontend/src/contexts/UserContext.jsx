@@ -15,6 +15,7 @@ export const useUser = () => {
 
 export const UserProvider = ({ children }) => {
   const [user, setUser] = useState(null)
+  const [accessToken, setAccessToken] = useState(null)
   const [loading, setLoading] = useState(true)
   const [chatHistory, setChatHistory] = useState([])
   const { toast } = useToast()
@@ -51,6 +52,7 @@ export const UserProvider = ({ children }) => {
           })
         } else {
           setUser(session?.user ?? null)
+          setAccessToken(session?.access_token ?? null)
         }
       } catch (error) {
         toast({
@@ -68,6 +70,7 @@ export const UserProvider = ({ children }) => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         setUser(session?.user ?? null)
+        setAccessToken(session?.access_token ?? null)
         setLoading(false)
         
         if (event === 'SIGNED_IN') {
@@ -271,6 +274,7 @@ export const UserProvider = ({ children }) => {
 
   const value = {
     user,
+    accessToken,
     loading,
     isAuthenticated: !!user,
     chatHistory,
